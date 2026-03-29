@@ -68,7 +68,7 @@
         <p class="text-2xl font-bold text-white" id="stat-total-guests"></p>
       </div>
       <div class="card p-5">
-        <p class="text-gray-400 text-xs mb-1">Avg Check (Dinner)</p>
+        <p class="text-gray-400 text-xs mb-1">Avg Dinner Check (OT Covers)</p>
         <p class="text-2xl font-bold text-white" id="stat-avg-check"></p>
       </div>
       <div class="card p-5">
@@ -312,7 +312,7 @@ function initOverview() {
   const totalRev = HIST.reduce((s,r)=>s+r.tr, 0);
   const totalGuests = HIST.reduce((s,r)=>s+r.lg+r.dg, 0);
   const totalDinnerRev = HIST.reduce((s,r)=>s+r.dr, 0);
-  const totalDinnerGuests = HIST.reduce((s,r)=>s+r.dg, 0);
+  const totalDinnerOTCovers = HIST.reduce((s,r)=>s+(r.odc||0), 0);
   const totalLabor = HIST.reduce((s,r)=>s+r.llc+r.dlc, 0);
   const bestDay = HIST.reduce((a,b)=>b.tr>a.tr?b:a);
 
@@ -322,7 +322,7 @@ function initOverview() {
   $('stat-dinner-pct').textContent = pct(totalDinnerRev/totalRev*100);
   $('stat-total-labor').textContent = fmt(totalLabor);
   $('stat-labor-pct').textContent = pct(totalLabor/totalRev*100);
-  $('stat-avg-check').textContent = fmt(totalDinnerRev/totalDinnerGuests, 2);
+  $('stat-avg-check').textContent = fmt(totalDinnerRev/totalDinnerOTCovers, 2);
   $('stat-best-day').textContent = bestDay.date.slice(5)+' ('+bestDay.dow.slice(0,3)+')';
 }
 
