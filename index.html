@@ -92,6 +92,25 @@
       </div>
     </div>
 
+    <!-- Profitability Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      <div class="card p-5 border-l-4 border-green-500">
+        <p class="text-gray-400 text-xs mb-1">Overall Est. Profit Margin</p>
+        <p class="text-2xl font-bold text-green-400" id="stat-margin-overall"></p>
+        <p class="text-gray-500 text-xs mt-1" id="stat-margin-overall-detail"></p>
+      </div>
+      <div class="card p-5 border-l-4 border-green-500">
+        <p class="text-gray-400 text-xs mb-1">Dinner Est. Profit Margin</p>
+        <p class="text-2xl font-bold text-green-400" id="stat-margin-dinner"></p>
+        <p class="text-gray-500 text-xs mt-1" id="stat-margin-dinner-detail"></p>
+      </div>
+      <div class="card p-5 border-l-4 border-red-500">
+        <p class="text-gray-400 text-xs mb-1">Lunch Est. Profit Margin</p>
+        <p class="text-2xl font-bold text-red-400" id="stat-margin-lunch"></p>
+        <p class="text-gray-500 text-xs mt-1" id="stat-margin-lunch-detail"></p>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="card p-6">
         <h2 class="text-lg font-semibold text-white mb-4">Avg Revenue by Day of Week</h2>
@@ -343,6 +362,35 @@ function initOverview() {
   $('stat-dinner-split').textContent = 'Food '+fmt(dinnerAvg*0.647,2)+' · Bar '+fmt(dinnerAvg*0.329,2);
   $('stat-lunch-split').textContent = 'Food '+fmt(lunchAvg*0.634,2)+' · Bar '+fmt(lunchAvg*0.313,2);
   $('stat-best-day').textContent = bestDay.date.slice(5)+' ('+bestDay.dow.slice(0,3)+')';
+
+  // Profitability estimates (36% food cost)
+  const FOOD_COST_PCT = 0.36;
+  const totalLaborCost = HIST.reduce((s,r)=>s+(r.llc||0)+(r.dlc||0),0);
+  const dinnerLaborCost = HIST.reduce((s,r)=>s+(r.dlc||0),0);
+  const lunchLaborCost = HIST.reduce((s,r)=>s+(r.llc||0),0);
+
+  const overallFoodCost = totalRev * FOOD_COST_PCT;
+  const overallProfit = totalRev - totalLaborCost - overallFoodCost;
+  const overallMargin = overallProfit / totalRev * 100;
+
+  const dinnerFoodCost = totalDinnerRev * FOOD_COST_PCT;
+  const dinnerProfit = totalDinnerRev - dinnerLaborCost - dinnerFoodCost;
+  const dinnerMargin = dinnerProfit / totalDinnerRev * 100;
+
+  const lunchFoodCost = totalLunchRev * FOOD_COST_PCT;
+  const lunchProfit = totalLunchRev - lunchLaborCost - lunchFoodCost;
+  const lunchMargin = lunchProfit / totalLunchRev * 100;
+
+  $('stat-margin-overall').textContent = pct(overallMargin);
+  $('stat-margin-overall-detail').textContent = 'Rev '+fmt(totalRev)+' − Labor '+fmt(totalLaborCost)+' − Food '+fmt(overallFoodCost)+' = '+fmt(overallProfit);
+
+  $('stat-margin-dinner').textContent = pct(dinnerMargin);
+  $('stat-margin-dinner-detail').textContent = 'Rev '+fmt(totalDinnerRev)+' − Labor '+fmt(dinnerLaborCost)+' − Food '+fmt(dinnerFoodCost)+' = '+fmt(dinnerProfit);
+
+  $('stat-margin-lunch').textContent = pct(lunchMargin);
+  const lunchColor = lunchMargin < 0 ? 'text-red-400' : 'text-green-400';
+  $('stat-margin-lunch').className = 'text-2xl font-bold ' + lunchColor;
+  $('stat-margin-lunch-detail').textContent = 'Rev '+fmt(totalLunchRev)+' − Labor '+fmt(lunchLaborCost)+' − Food '+fmt(lunchFoodCost)+' = '+fmt(lunchProfit);
 }
 
 let chartDOW, chartDaypart, chartDaily;
