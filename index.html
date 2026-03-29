@@ -17,326 +17,569 @@
   ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
   table th { cursor: pointer; user-select: none; }
   table th:hover { color: #e94560; }
-  .sort-arrow { font-size: 0.7em; margin-left: 4px; }
+  .badge-green { background: #064e3b; color: #6ee7b7; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; }
+  .badge-red { background: #7f1d1d; color: #fca5a5; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; }
+  .badge-yellow { background: #78350f; color: #fde68a; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; }
+  .range-bar { height: 6px; border-radius: 3px; background: #0f3460; position: relative; }
+  .range-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #00b4d8, #e94560); }
 </style>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        navy: '#1a1a2e',
-        card: '#16213e',
-        border: '#0f3460',
-        coral: '#e94560',
-        teal: '#00b4d8',
-        darkblue: '#0f3460',
-      }
-    }
-  }
-}
-</script>
+<script>tailwind.config={theme:{extend:{colors:{navy:'#1a1a2e',card:'#16213e',border:'#0f3460',coral:'#e94560',teal:'#00b4d8',darkblue:'#0f3460'}}}}</script>
 </head>
 <body class="min-h-screen">
-
 <div class="max-w-7xl mx-auto px-4 py-8">
+
   <!-- Header -->
   <div class="text-center mb-8">
-    <h1 class="text-4xl font-bold text-white mb-2">Northport Revenue Forecast</h1>
-    <p class="text-gray-400 text-lg">March 2026 Performance & 14-Day Outlook</p>
+    <h1 class="text-4xl font-bold text-white mb-2">🍽️ Northport Revenue Forecast</h1>
+    <p class="text-gray-400 text-lg">March 2026 Performance · 7-Day Outlook · Labor Analysis</p>
   </div>
 
   <!-- Tabs -->
-  <div class="flex justify-center gap-2 mb-8">
-    <button class="tab-btn active px-6 py-2.5 rounded-lg font-semibold text-sm" onclick="switchTab('overview')" id="tab-overview">Overview</button>
-    <button class="tab-btn px-6 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('forecast')" id="tab-forecast">Forecast</button>
-    <button class="tab-btn px-6 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('historical')" id="tab-historical">Historical</button>
+  <div class="flex flex-wrap justify-center gap-2 mb-8">
+    <button class="tab-btn active px-5 py-2.5 rounded-lg font-semibold text-sm" onclick="switchTab('overview')" id="tab-overview">📊 Overview</button>
+    <button class="tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('forecast')" id="tab-forecast">🔮 Forecast</button>
+    <button class="tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('labor')" id="tab-labor">👥 Labor</button>
+    <button class="tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('historical')" id="tab-historical">📅 Historical</button>
   </div>
 
-  <!-- Overview Tab -->
+  <!-- ═══════════════ OVERVIEW TAB ═══════════════ -->
   <div id="panel-overview">
-    <!-- Stat Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div class="card p-5">
-        <p class="text-gray-400 text-sm mb-1">Total Revenue</p>
-        <p class="text-3xl font-bold text-white" id="stat-total-rev"></p>
+        <p class="text-gray-400 text-xs mb-1">Total Revenue (Mar)</p>
+        <p class="text-2xl font-bold text-white" id="stat-total-rev"></p>
       </div>
       <div class="card p-5">
-        <p class="text-gray-400 text-sm mb-1">Avg Daily Revenue</p>
-        <p class="text-3xl font-bold text-white" id="stat-avg-rev"></p>
+        <p class="text-gray-400 text-xs mb-1">Avg Daily Revenue</p>
+        <p class="text-2xl font-bold text-white" id="stat-avg-rev"></p>
       </div>
       <div class="card p-5">
-        <p class="text-gray-400 text-sm mb-1">Total Guests</p>
-        <p class="text-3xl font-bold text-white" id="stat-total-guests"></p>
+        <p class="text-gray-400 text-xs mb-1">Total Labor Cost</p>
+        <p class="text-2xl font-bold text-teal" id="stat-total-labor"></p>
       </div>
       <div class="card p-5">
-        <p class="text-gray-400 text-sm mb-1">Dinner Revenue %</p>
-        <p class="text-3xl font-bold text-coral" id="stat-dinner-pct"></p>
+        <p class="text-gray-400 text-xs mb-1">Avg Labor %</p>
+        <p class="text-2xl font-bold text-coral" id="stat-labor-pct"></p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Total Guests</p>
+        <p class="text-2xl font-bold text-white" id="stat-total-guests"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Avg Check (Dinner)</p>
+        <p class="text-2xl font-bold text-white" id="stat-avg-check"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Dinner Revenue %</p>
+        <p class="text-2xl font-bold text-coral" id="stat-dinner-pct"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Best Day</p>
+        <p class="text-2xl font-bold text-green-400" id="stat-best-day"></p>
       </div>
     </div>
 
-    <!-- Chart -->
-    <div class="card p-6 mb-8">
-      <h2 class="text-xl font-semibold text-white mb-4">Average Revenue by Day of Week</h2>
-      <div style="height: 350px;"><canvas id="chartDayOfWeek"></canvas></div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="card p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Avg Revenue by Day of Week</h2>
+        <div style="height:280px"><canvas id="chartDOW"></canvas></div>
+      </div>
+      <div class="card p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Lunch vs Dinner Split</h2>
+        <div style="height:280px"><canvas id="chartDaypart"></canvas></div>
+      </div>
     </div>
 
-    <!-- Top 5 -->
     <div class="card p-6">
-      <h2 class="text-xl font-semibold text-white mb-4">Top 5 Revenue Days</h2>
-      <div id="top5-list"></div>
+      <h2 class="text-lg font-semibold text-white mb-4">Daily Revenue — March 2026</h2>
+      <div style="height:300px"><canvas id="chartDaily"></canvas></div>
     </div>
   </div>
 
-  <!-- Forecast Tab -->
+  <!-- ═══════════════ FORECAST TAB ═══════════════ -->
   <div id="panel-forecast" class="hidden">
-    <div class="card p-5 mb-8 inline-block">
-      <p class="text-gray-400 text-sm mb-1">Forecasted 2-Week Total</p>
-      <p class="text-3xl font-bold text-coral" id="stat-forecast-total"></p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">7-Day Forecast Total</p>
+        <p class="text-2xl font-bold text-white" id="fc-total"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Covers Booked (Dinner)</p>
+        <p class="text-2xl font-bold text-teal" id="fc-covers"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Biggest Day</p>
+        <p class="text-2xl font-bold text-coral" id="fc-big-day"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Est. Labor Cost</p>
+        <p class="text-2xl font-bold text-yellow-400" id="fc-labor"></p>
+      </div>
     </div>
 
-    <div class="card p-6 mb-8">
-      <h2 class="text-xl font-semibold text-white mb-4">14-Day Revenue Forecast</h2>
-      <div style="height: 350px;"><canvas id="chartForecast"></canvas></div>
+    <div class="card p-6 mb-6">
+      <h2 class="text-lg font-semibold text-white mb-4">7-Day Revenue Forecast</h2>
+      <div style="height:300px"><canvas id="chartForecast"></canvas></div>
     </div>
 
     <div class="card p-6 overflow-x-auto">
-      <h2 class="text-xl font-semibold text-white mb-4">Forecast Details</h2>
+      <h2 class="text-lg font-semibold text-white mb-4">Detailed Forecast · Mar 30 – Apr 5</h2>
       <table class="w-full text-sm">
         <thead>
-          <tr class="text-gray-400 border-b border-gray-700">
-            <th class="text-left py-3 px-3">Date</th>
-            <th class="text-left py-3 px-3">Day</th>
-            <th class="text-right py-3 px-3">Lunch Forecast</th>
-            <th class="text-right py-3 px-3">Dinner Forecast</th>
-            <th class="text-right py-3 px-3">Total Forecast</th>
+          <tr class="text-gray-400 text-left border-b border-darkblue">
+            <th class="pb-3 pr-4">Date</th>
+            <th class="pb-3 pr-4">Day</th>
+            <th class="pb-3 pr-4 text-right">🍽️ Dinner Covers</th>
+            <th class="pb-3 pr-4 text-right">Forecast Dinner</th>
+            <th class="pb-3 pr-4 text-right">Forecast Lunch</th>
+            <th class="pb-3 pr-4 text-right font-semibold text-white">Total Forecast</th>
+            <th class="pb-3 pr-4 text-right">Range</th>
+            <th class="pb-3 pr-4 text-right">Est. Labor</th>
+            <th class="pb-3 text-right">Labor %</th>
           </tr>
         </thead>
         <tbody id="forecast-table-body"></tbody>
       </table>
+      <p class="text-gray-500 text-xs mt-4">* Forecast blends current OpenTable bookings with March historical patterns. Low/High = ±15% range.</p>
     </div>
   </div>
 
-  <!-- Historical Tab -->
-  <div id="panel-historical" class="hidden">
+  <!-- ═══════════════ LABOR TAB ═══════════════ -->
+  <div id="panel-labor" class="hidden">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Total Labor (Mar)</p>
+        <p class="text-2xl font-bold text-white" id="lab-total"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Overall Labor %</p>
+        <p class="text-2xl font-bold text-teal" id="lab-overall-pct"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Avg Dinner Labor %</p>
+        <p class="text-2xl font-bold text-green-400" id="lab-dinner-pct"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Avg Lunch Labor %</p>
+        <p class="text-2xl font-bold text-coral" id="lab-lunch-pct"></p>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-6 border border-yellow-800">
+      <h3 class="text-yellow-400 font-semibold mb-2">⚠️ Lunch Profitability Alert</h3>
+      <p class="text-gray-300 text-sm">Lunch labor is averaging <strong class="text-coral" id="lab-lunch-alert-pct"></strong> of lunch revenue — you're spending more on staff than you're making at lunch most days. Consider trimming lunch hours on slow weekdays (Mon–Wed) or building lunch revenue through targeted promotions.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="card p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Labor Cost % by Day</h2>
+        <div style="height:280px"><canvas id="chartLaborPct"></canvas></div>
+      </div>
+      <div class="card p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Avg Labor % by Day of Week</h2>
+        <div style="height:280px"><canvas id="chartLaborDOW"></canvas></div>
+      </div>
+    </div>
+
     <div class="card p-6 overflow-x-auto">
-      <h2 class="text-xl font-semibold text-white mb-4">All Historical Days</h2>
-      <table class="w-full text-sm" id="historical-table">
+      <h2 class="text-lg font-semibold text-white mb-4">Labor Cost Breakdown by Day</h2>
+      <table class="w-full text-sm">
         <thead>
-          <tr class="text-gray-400 border-b border-gray-700">
-            <th class="text-left py-3 px-3" data-col="date">Date <span class="sort-arrow"></span></th>
-            <th class="text-left py-3 px-3" data-col="day_of_week">Day <span class="sort-arrow"></span></th>
-            <th class="text-right py-3 px-3" data-col="lunch_revenue">Lunch Rev <span class="sort-arrow"></span></th>
-            <th class="text-right py-3 px-3" data-col="dinner_revenue">Dinner Rev <span class="sort-arrow"></span></th>
-            <th class="text-right py-3 px-3" data-col="total_revenue">Total Rev <span class="sort-arrow"></span></th>
-            <th class="text-right py-3 px-3" data-col="guests">Guests <span class="sort-arrow"></span></th>
-            <th class="text-right py-3 px-3" data-col="avg_check">Avg Check <span class="sort-arrow"></span></th>
+          <tr class="text-gray-400 text-left border-b border-darkblue">
+            <th class="pb-3 pr-4">Date</th>
+            <th class="pb-3 pr-4">Day</th>
+            <th class="pb-3 pr-4 text-right">Total Revenue</th>
+            <th class="pb-3 pr-4 text-right">Total Labor</th>
+            <th class="pb-3 pr-4 text-right">Labor %</th>
+            <th class="pb-3 pr-4 text-right">Dinner Labor</th>
+            <th class="pb-3 pr-4 text-right">Dinner %</th>
+            <th class="pb-3 pr-4 text-right">Lunch Labor</th>
+            <th class="pb-3 text-right">Lunch %</th>
           </tr>
         </thead>
-        <tbody id="historical-table-body"></tbody>
+        <tbody id="labor-table-body"></tbody>
       </table>
     </div>
   </div>
-</div>
+
+  <!-- ═══════════════ HISTORICAL TAB ═══════════════ -->
+  <div id="panel-historical" class="hidden">
+    <div class="card p-6 overflow-x-auto">
+      <h2 class="text-lg font-semibold text-white mb-4">March 2026 · Daily Performance</h2>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-gray-400 text-left border-b border-darkblue" id="hist-thead">
+            <th class="pb-3 pr-4" onclick="sortHist('date')">Date <span class="sort-arrow"></span></th>
+            <th class="pb-3 pr-4" onclick="sortHist('dow')">Day</th>
+            <th class="pb-3 pr-4 text-right" onclick="sortHist('lr')">Lunch Rev</th>
+            <th class="pb-3 pr-4 text-right" onclick="sortHist('dr')">Dinner Rev</th>
+            <th class="pb-3 pr-4 text-right" onclick="sortHist('tr')">Total Rev</th>
+            <th class="pb-3 pr-4 text-right" onclick="sortHist('dg')">Guests</th>
+            <th class="pb-3 pr-4 text-right" onclick="sortHist('odc')">OT Covers</th>
+            <th class="pb-3 pr-4 text-right" onclick="sortHist('labor')">Labor $</th>
+            <th class="pb-3 text-right" onclick="sortHist('labor_pct')">Labor %</th>
+          </tr>
+        </thead>
+        <tbody id="hist-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end container -->
 
 <script>
-const DATA = [{"date":"2026-03-01","day_of_week":"Sunday","week_num":1,"lunch_revenue":7968,"dinner_revenue":17871,"total_revenue":25839,"lunch_guests":168,"dinner_guests":216,"lunch_checks":49,"dinner_checks":84},{"date":"2026-03-02","day_of_week":"Monday","week_num":1,"lunch_revenue":447,"dinner_revenue":1875,"total_revenue":2322,"lunch_guests":10,"dinner_guests":28,"lunch_checks":5,"dinner_checks":13},{"date":"2026-03-03","day_of_week":"Tuesday","week_num":1,"lunch_revenue":271,"dinner_revenue":5231,"total_revenue":5502,"lunch_guests":7,"dinner_guests":89,"lunch_checks":2,"dinner_checks":21},{"date":"2026-03-04","day_of_week":"Wednesday","week_num":1,"lunch_revenue":153,"dinner_revenue":7787,"total_revenue":7940,"lunch_guests":9,"dinner_guests":96,"lunch_checks":2,"dinner_checks":36},{"date":"2026-03-05","day_of_week":"Thursday","week_num":1,"lunch_revenue":711,"dinner_revenue":8602,"total_revenue":9313,"lunch_guests":9,"dinner_guests":97,"lunch_checks":3,"dinner_checks":31},{"date":"2026-03-06","day_of_week":"Friday","week_num":1,"lunch_revenue":0,"dinner_revenue":18796,"total_revenue":18796,"lunch_guests":1,"dinner_guests":217,"lunch_checks":0,"dinner_checks":84},{"date":"2026-03-07","day_of_week":"Saturday","week_num":1,"lunch_revenue":1911,"dinner_revenue":28456.5,"total_revenue":30367.5,"lunch_guests":45,"dinner_guests":333,"lunch_checks":15,"dinner_checks":130},{"date":"2026-03-08","day_of_week":"Sunday","week_num":2,"lunch_revenue":3615,"dinner_revenue":10085.5,"total_revenue":13700.5,"lunch_guests":71,"dinner_guests":128,"lunch_checks":17,"dinner_checks":40},{"date":"2026-03-09","day_of_week":"Monday","week_num":2,"lunch_revenue":746,"dinner_revenue":2722,"total_revenue":3468,"lunch_guests":13,"dinner_guests":39,"lunch_checks":5,"dinner_checks":16},{"date":"2026-03-10","day_of_week":"Tuesday","week_num":2,"lunch_revenue":440,"dinner_revenue":9082,"total_revenue":9522,"lunch_guests":11,"dinner_guests":102,"lunch_checks":5,"dinner_checks":34},{"date":"2026-03-11","day_of_week":"Wednesday","week_num":2,"lunch_revenue":0,"dinner_revenue":3574,"total_revenue":3574,"lunch_guests":1,"dinner_guests":46,"lunch_checks":0,"dinner_checks":26},{"date":"2026-03-12","day_of_week":"Thursday","week_num":2,"lunch_revenue":1081,"dinner_revenue":9350,"total_revenue":10431,"lunch_guests":13,"dinner_guests":114,"lunch_checks":5,"dinner_checks":55},{"date":"2026-03-13","day_of_week":"Friday","week_num":2,"lunch_revenue":892,"dinner_revenue":21666,"total_revenue":22558,"lunch_guests":22,"dinner_guests":241,"lunch_checks":7,"dinner_checks":94},{"date":"2026-03-14","day_of_week":"Saturday","week_num":2,"lunch_revenue":1530,"dinner_revenue":32151,"total_revenue":33681,"lunch_guests":36,"dinner_guests":374,"lunch_checks":12,"dinner_checks":165},{"date":"2026-03-15","day_of_week":"Sunday","week_num":3,"lunch_revenue":5795,"dinner_revenue":13588.5,"total_revenue":19383.5,"lunch_guests":120,"dinner_guests":181,"lunch_checks":43,"dinner_checks":50},{"date":"2026-03-16","day_of_week":"Monday","week_num":3,"lunch_revenue":154,"dinner_revenue":7746,"total_revenue":7900,"lunch_guests":3,"dinner_guests":103,"lunch_checks":1,"dinner_checks":37},{"date":"2026-03-17","day_of_week":"Tuesday","week_num":3,"lunch_revenue":1360,"dinner_revenue":10758.02,"total_revenue":12118.02,"lunch_guests":25,"dinner_guests":154,"lunch_checks":9,"dinner_checks":49},{"date":"2026-03-18","day_of_week":"Wednesday","week_num":3,"lunch_revenue":1426,"dinner_revenue":5459,"total_revenue":6885,"lunch_guests":21,"dinner_guests":65,"lunch_checks":7,"dinner_checks":22},{"date":"2026-03-19","day_of_week":"Thursday","week_num":3,"lunch_revenue":650,"dinner_revenue":11918.01,"total_revenue":12568.01,"lunch_guests":13,"dinner_guests":155,"lunch_checks":6,"dinner_checks":52},{"date":"2026-03-20","day_of_week":"Friday","week_num":3,"lunch_revenue":575,"dinner_revenue":25252.01,"total_revenue":25827.01,"lunch_guests":14,"dinner_guests":290,"lunch_checks":5,"dinner_checks":121},{"date":"2026-03-21","day_of_week":"Saturday","week_num":3,"lunch_revenue":2064,"dinner_revenue":35640.51,"total_revenue":37704.51,"lunch_guests":43,"dinner_guests":382,"lunch_checks":17,"dinner_checks":150},{"date":"2026-03-22","day_of_week":"Sunday","week_num":4,"lunch_revenue":5045,"dinner_revenue":15243.5,"total_revenue":20288.5,"lunch_guests":107,"dinner_guests":182,"lunch_checks":27,"dinner_checks":66},{"date":"2026-03-23","day_of_week":"Monday","week_num":4,"lunch_revenue":454,"dinner_revenue":4954,"total_revenue":5408,"lunch_guests":11,"dinner_guests":55,"lunch_checks":5,"dinner_checks":22},{"date":"2026-03-24","day_of_week":"Tuesday","week_num":4,"lunch_revenue":469,"dinner_revenue":4467,"total_revenue":4936,"lunch_guests":9,"dinner_guests":56,"lunch_checks":4,"dinner_checks":28},{"date":"2026-03-25","day_of_week":"Wednesday","week_num":4,"lunch_revenue":1944,"dinner_revenue":11375,"total_revenue":13319,"lunch_guests":91,"dinner_guests":144,"lunch_checks":24,"dinner_checks":58},{"date":"2026-03-26","day_of_week":"Thursday","week_num":4,"lunch_revenue":1103,"dinner_revenue":8854,"total_revenue":9957,"lunch_guests":22,"dinner_guests":113,"lunch_checks":9,"dinner_checks":53},{"date":"2026-03-27","day_of_week":"Friday","week_num":4,"lunch_revenue":517,"dinner_revenue":22672,"total_revenue":23189,"lunch_guests":11,"dinner_guests":259,"lunch_checks":6,"dinner_checks":113},{"date":"2026-03-28","day_of_week":"Saturday","week_num":4,"lunch_revenue":3333,"dinner_revenue":33972,"total_revenue":37305,"lunch_guests":70,"dinner_guests":387,"lunch_checks":21,"dinner_checks":187}];
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+const HIST = [
+  {date:"2026-03-01",dow:"Sunday",lr:7968,dr:17871,tr:25839,lg:168,dg:216,olc:164,odc:181,llc:1521.84,dlc:2328.41},
+  {date:"2026-03-02",dow:"Monday",lr:447,dr:1875,tr:2322,lg:10,dg:28,olc:0,odc:19,llc:625.00,dlc:1002.66},
+  {date:"2026-03-03",dow:"Tuesday",lr:271,dr:5231,tr:5502,lg:7,dg:89,olc:35,odc:40,llc:801.98,dlc:1147.24},
+  {date:"2026-03-04",dow:"Wednesday",lr:153,dr:7787,tr:7940,lg:9,dg:96,olc:8,odc:73,llc:640.82,dlc:1626.64},
+  {date:"2026-03-05",dow:"Thursday",lr:711,dr:8602,tr:9313,lg:9,dg:97,olc:11,odc:73,llc:629.60,dlc:1871.44},
+  {date:"2026-03-06",dow:"Friday",lr:0,dr:18796,tr:18796,lg:1,dg:217,olc:13,odc:167,llc:808.61,dlc:2626.76},
+  {date:"2026-03-07",dow:"Saturday",lr:1911,dr:28456.5,tr:30367.5,lg:45,dg:333,olc:40,odc:249,llc:1089.62,dlc:2774.14},
+  {date:"2026-03-08",dow:"Sunday",lr:3615,dr:10085.5,tr:13700.5,lg:71,dg:128,olc:94,odc:104,llc:1218.39,dlc:1844.41},
+  {date:"2026-03-09",dow:"Monday",lr:746,dr:2722,tr:3468,lg:13,dg:39,olc:12,odc:28,llc:628.32,dlc:1066.92},
+  {date:"2026-03-10",dow:"Tuesday",lr:440,dr:9082,tr:9522,lg:11,dg:102,olc:5,odc:76,llc:735.93,dlc:1502.21},
+  {date:"2026-03-11",dow:"Wednesday",lr:0,dr:3574,tr:3574,lg:1,dg:46,olc:35,odc:30,llc:641.84,dlc:1204.88},
+  {date:"2026-03-12",dow:"Thursday",lr:1081,dr:9350,tr:10431,lg:13,dg:114,olc:14,odc:86,llc:572.99,dlc:2010.16},
+  {date:"2026-03-13",dow:"Friday",lr:892,dr:21666,tr:22558,lg:22,dg:241,olc:31,odc:192,llc:816.00,dlc:2872.58},
+  {date:"2026-03-14",dow:"Saturday",lr:1530,dr:32151,tr:33681,lg:36,dg:374,olc:101,odc:263,llc:1493.79,dlc:2672.15},
+  {date:"2026-03-15",dow:"Sunday",lr:5795,dr:13588.5,tr:19383.5,lg:120,dg:181,olc:144,odc:138,llc:1530.51,dlc:2017.31},
+  {date:"2026-03-16",dow:"Monday",lr:154,dr:7746,tr:7900,lg:3,dg:103,olc:3,odc:80,llc:587.52,dlc:1997.16},
+  {date:"2026-03-17",dow:"Tuesday",lr:1360,dr:10758.02,tr:12118.02,lg:25,dg:154,olc:23,odc:119,llc:861.65,dlc:1974.21},
+  {date:"2026-03-18",dow:"Wednesday",lr:1426,dr:5459,tr:6885,lg:21,dg:65,olc:17,odc:41,llc:676.77,dlc:1328.30},
+  {date:"2026-03-19",dow:"Thursday",lr:650,dr:11918.01,tr:12568.01,lg:13,dg:155,olc:10,odc:120,llc:652.29,dlc:2103.50},
+  {date:"2026-03-20",dow:"Friday",lr:575,dr:25252.01,tr:25827.01,lg:14,dg:290,olc:17,odc:208,llc:866.75,dlc:3023.03},
+  {date:"2026-03-21",dow:"Saturday",lr:2064,dr:35640.51,tr:37704.51,lg:43,dg:382,olc:108,odc:288,llc:1412.95,dlc:2888.39},
+  {date:"2026-03-22",dow:"Sunday",lr:5045,dr:15243.5,tr:20288.5,lg:107,dg:182,olc:102,odc:134,llc:1506.03,dlc:2365.64},
+  {date:"2026-03-23",dow:"Monday",lr:454,dr:4954,tr:5408,lg:11,dg:55,olc:8,odc:38,llc:701.51,dlc:1268.88},
+  {date:"2026-03-24",dow:"Tuesday",lr:469,dr:4467,tr:4936,lg:9,dg:56,olc:12,odc:31,llc:725.22,dlc:1275.00},
+  {date:"2026-03-25",dow:"Wednesday",lr:1944,dr:11375,tr:13319,lg:91,dg:144,olc:82,odc:95,llc:1204.37,dlc:1976.76},
+  {date:"2026-03-26",dow:"Thursday",lr:1103,dr:8854,tr:9957,lg:22,dg:113,olc:21,odc:75,llc:824.16,dlc:1983.64},
+  {date:"2026-03-27",dow:"Friday",lr:517,dr:22672,tr:23189,lg:11,dg:259,olc:19,odc:192,llc:860.12,dlc:2495.43},
+  {date:"2026-03-28",dow:"Saturday",lr:3333,dr:33972,tr:37305,lg:70,dg:387,olc:58,odc:284,llc:1161.78,dlc:2466.87},
+];
 
-// Utility functions
-const fmt = (n) => '$' + Math.round(n).toLocaleString('en-US');
-const fmtDate = (d) => { const dt = new Date(d + 'T12:00:00'); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+const FORECAST = [
+  {date:"2026-03-30",dow:"Sunday",dc:16,lc:7,fd:1637,fl:12916,ft:14553,lo:12370,hi:16736,el:2632,elp:18.1},
+  {date:"2026-03-31",dow:"Monday",dc:42,lc:2,fd:4521,fl:323,ft:4844,lo:4118,hi:5571,el:2001,elp:41.3},
+  {date:"2026-04-01",dow:"Wednesday",dc:69,lc:6,fd:8244,fl:507,ft:8751,lo:7439,hi:10064,el:2560,elp:29.3},
+  {date:"2026-04-02",dow:"Thursday",dc:67,lc:0,fd:7384,fl:1038,ft:8422,lo:7159,hi:9685,el:2121,elp:25.2},
+  {date:"2026-04-03",dow:"Friday",dc:83,lc:4,fd:9649,fl:2937,ft:12586,lo:10698,hi:14474,el:2002,elp:15.9},
+  {date:"2026-04-04",dow:"Saturday",dc:207,lc:53,fd:24876,fl:3851,ft:28727,lo:24418,hi:33036,el:3307,elp:11.5},
+  {date:"2026-04-05",dow:"Sunday",dc:158,lc:180,fd:16162,fl:7355,ft:23517,lo:19990,hi:27045,el:4255,elp:18.1},
+];
 
-// Compute averages by day of week
-const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-function avgByDay() {
-  const acc = {};
-  DAYS_ORDER.forEach(d => acc[d] = { lunch: [], dinner: [] });
-  DATA.forEach(r => {
-    acc[r.day_of_week].lunch.push(r.lunch_revenue);
-    acc[r.day_of_week].dinner.push(r.dinner_revenue);
-  });
-  const result = {};
-  DAYS_ORDER.forEach(d => {
-    result[d] = {
-      lunch: acc[d].lunch.reduce((a,b)=>a+b,0) / acc[d].lunch.length,
-      dinner: acc[d].dinner.reduce((a,b)=>a+b,0) / acc[d].dinner.length
-    };
-  });
-  return result;
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const fmt = (n, decimals=0) => n==null?'—':'$'+n.toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+const pct = (n) => n==null||isNaN(n)?'—':n.toFixed(1)+'%';
+const DOW_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function laborBadge(p) {
+  if (p == null || isNaN(p)) return '<span class="badge-yellow">N/A</span>';
+  if (p < 25) return `<span class="badge-green">${p.toFixed(1)}%</span>`;
+  if (p < 40) return `<span class="badge-yellow">${p.toFixed(1)}%</span>`;
+  return `<span class="badge-red">${p.toFixed(1)}%</span>`;
 }
 
-// Generate forecast
-function generateForecast() {
-  const avgs = avgByDay();
-  const forecast = [];
-  const startDate = new Date('2026-03-29T12:00:00');
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + i);
-    const dayName = DAYS_ORDER[d.getDay()];
-    const dateStr = d.toISOString().split('T')[0];
-    forecast.push({
-      date: dateStr,
-      day_of_week: dayName,
-      lunch: Math.round(avgs[dayName].lunch),
-      dinner: Math.round(avgs[dayName].dinner),
-      total: Math.round(avgs[dayName].lunch + avgs[dayName].dinner)
-    });
-  }
-  return forecast;
+// ═══════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════
+const TABS = ['overview','forecast','labor','historical'];
+function switchTab(name) {
+  TABS.forEach(t => {
+    $('panel-'+t).classList.toggle('hidden', t !== name);
+    const btn = $('tab-'+t);
+    btn.classList.toggle('active', t === name);
+    btn.classList.toggle('text-gray-400', t !== name);
+  });
+  if (name === 'overview') renderOverviewCharts();
+  if (name === 'forecast') renderForecastCharts();
+  if (name === 'labor') renderLaborCharts();
 }
 
-// Tab switching
-function switchTab(tab) {
-  ['overview','forecast','historical'].forEach(t => {
-    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
-    const btn = document.getElementById('tab-' + t);
-    btn.classList.toggle('active', t === tab);
-    btn.classList.toggle('text-gray-400', t !== tab);
-  });
+// ═══════════════════════════════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════════════════════════════
+function initOverview() {
+  const totalRev = HIST.reduce((s,r)=>s+r.tr, 0);
+  const totalGuests = HIST.reduce((s,r)=>s+r.lg+r.dg, 0);
+  const totalDinnerRev = HIST.reduce((s,r)=>s+r.dr, 0);
+  const totalDinnerGuests = HIST.reduce((s,r)=>s+r.dg, 0);
+  const totalLabor = HIST.reduce((s,r)=>s+r.llc+r.dlc, 0);
+  const bestDay = HIST.reduce((a,b)=>b.tr>a.tr?b:a);
+
+  $('stat-total-rev').textContent = fmt(totalRev);
+  $('stat-avg-rev').textContent = fmt(totalRev/HIST.length);
+  $('stat-total-guests').textContent = totalGuests.toLocaleString();
+  $('stat-dinner-pct').textContent = pct(totalDinnerRev/totalRev*100);
+  $('stat-total-labor').textContent = fmt(totalLabor);
+  $('stat-labor-pct').textContent = pct(totalLabor/totalRev*100);
+  $('stat-avg-check').textContent = fmt(totalDinnerRev/totalDinnerGuests, 2);
+  $('stat-best-day').textContent = bestDay.date.slice(5)+' ('+bestDay.dow.slice(0,3)+')';
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  // Stats
-  const totalRev = DATA.reduce((s,r) => s + r.total_revenue, 0);
-  const totalDinner = DATA.reduce((s,r) => s + r.dinner_revenue, 0);
-  const totalGuests = DATA.reduce((s,r) => s + r.lunch_guests + r.dinner_guests, 0);
-  document.getElementById('stat-total-rev').textContent = fmt(totalRev);
-  document.getElementById('stat-avg-rev').textContent = fmt(totalRev / DATA.length);
-  document.getElementById('stat-total-guests').textContent = totalGuests.toLocaleString();
-  document.getElementById('stat-dinner-pct').textContent = Math.round(totalDinner / totalRev * 100) + '%';
-
-  // Day of week chart
-  const avgs = avgByDay();
-  new Chart(document.getElementById('chartDayOfWeek'), {
-    type: 'bar',
-    data: {
-      labels: DAYS_ORDER.map(d => d.slice(0,3)),
-      datasets: [
-        { label: 'Lunch', data: DAYS_ORDER.map(d => Math.round(avgs[d].lunch)), backgroundColor: '#e94560', borderRadius: 4 },
-        { label: 'Dinner', data: DAYS_ORDER.map(d => Math.round(avgs[d].dinner)), backgroundColor: '#00b4d8', borderRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#e0e0e0', font: { size: 13 } } },
-        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.parsed.y) } }
-      },
-      scales: {
-        x: { stacked: true, ticks: { color: '#9ca3af' }, grid: { display: false } },
-        y: { stacked: true, ticks: { color: '#9ca3af', callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: '#ffffff10' } }
-      }
-    }
-  });
-
-  // Top 5
-  const sorted = [...DATA].sort((a,b) => b.total_revenue - a.total_revenue).slice(0,5);
-  const top5Html = sorted.map((r, i) => `
-    <div class="flex justify-between items-center py-3 ${i < 4 ? 'border-b border-gray-700/50' : ''}">
-      <div class="flex items-center gap-3">
-        <span class="text-coral font-bold text-lg w-6">${i+1}</span>
-        <div>
-          <p class="text-white font-medium">${fmtDate(r.date)} (${r.day_of_week})</p>
-          <p class="text-gray-400 text-xs">L: ${fmt(r.lunch_revenue)} · D: ${fmt(r.dinner_revenue)}</p>
-        </div>
-      </div>
-      <span class="text-white font-bold text-lg">${fmt(r.total_revenue)}</span>
-    </div>
-  `).join('');
-  document.getElementById('top5-list').innerHTML = top5Html;
-
-  // Forecast
-  const forecast = generateForecast();
-  const forecastTotal = forecast.reduce((s,r) => s + r.total, 0);
-  document.getElementById('stat-forecast-total').textContent = fmt(forecastTotal);
-
-  new Chart(document.getElementById('chartForecast'), {
-    type: 'line',
-    data: {
-      labels: forecast.map(f => fmtDate(f.date)),
-      datasets: [
-        { label: 'Total', data: forecast.map(f => f.total), borderColor: '#e94560', backgroundColor: '#e9456020', fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#e94560' },
-        { label: 'Dinner', data: forecast.map(f => f.dinner), borderColor: '#00b4d8', borderDash: [5,5], tension: 0.3, pointRadius: 3, pointBackgroundColor: '#00b4d8' },
-        { label: 'Lunch', data: forecast.map(f => f.lunch), borderColor: '#e94560', borderDash: [5,5], tension: 0.3, pointRadius: 3, pointBackgroundColor: '#e94560', borderWidth: 1.5 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#e0e0e0' } },
-        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.parsed.y) } }
-      },
-      scales: {
-        x: { ticks: { color: '#9ca3af', maxRotation: 45 }, grid: { display: false } },
-        y: { ticks: { color: '#9ca3af', callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: '#ffffff10' } }
-      }
-    }
-  });
-
-  // Forecast table
-  const ftBody = forecast.map(f => `
-    <tr class="border-b border-gray-700/30 hover:bg-white/5">
-      <td class="py-2.5 px-3">${fmtDate(f.date)}</td>
-      <td class="py-2.5 px-3">${f.day_of_week}</td>
-      <td class="py-2.5 px-3 text-right">${fmt(f.lunch)}</td>
-      <td class="py-2.5 px-3 text-right">${fmt(f.dinner)}</td>
-      <td class="py-2.5 px-3 text-right font-semibold text-white">${fmt(f.total)}</td>
-    </tr>
-  `).join('');
-  document.getElementById('forecast-table-body').innerHTML = ftBody;
-
-  // Historical table
-  let histSortCol = 'date', histSortAsc = true;
-  const enriched = DATA.map(r => ({
-    ...r,
-    guests: r.lunch_guests + r.dinner_guests,
-    avg_check: (r.lunch_checks + r.dinner_checks) > 0 ? r.total_revenue / (r.lunch_checks + r.dinner_checks) : 0
+let chartDOW, chartDaypart, chartDaily;
+function renderOverviewCharts() {
+  // DOW averages
+  const dowMap = {};
+  DOW_ORDER.forEach(d => dowMap[d] = {lunch:[],dinner:[]});
+  HIST.forEach(r => { if(dowMap[r.dow]) { dowMap[r.dow].lunch.push(r.lr); dowMap[r.dow].dinner.push(r.dr); }});
+  const avgByDow = DOW_ORDER.map(d => ({
+    dow: d.slice(0,3),
+    lunch: dowMap[d].lunch.reduce((a,b)=>a+b,0)/Math.max(dowMap[d].lunch.length,1),
+    dinner: dowMap[d].dinner.reduce((a,b)=>a+b,0)/Math.max(dowMap[d].dinner.length,1),
   }));
 
-  function renderHistorical() {
-    const data = [...enriched].sort((a,b) => {
-      let va = a[histSortCol], vb = b[histSortCol];
-      if (typeof va === 'string') return histSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-      return histSortAsc ? va - vb : vb - va;
-    });
-    const html = data.map(r => `
-      <tr class="border-b border-gray-700/30 hover:bg-white/5">
-        <td class="py-2.5 px-3">${fmtDate(r.date)}</td>
-        <td class="py-2.5 px-3">${r.day_of_week}</td>
-        <td class="py-2.5 px-3 text-right">${fmt(r.lunch_revenue)}</td>
-        <td class="py-2.5 px-3 text-right">${fmt(r.dinner_revenue)}</td>
-        <td class="py-2.5 px-3 text-right font-semibold text-white">${fmt(r.total_revenue)}</td>
-        <td class="py-2.5 px-3 text-right">${r.guests.toLocaleString()}</td>
-        <td class="py-2.5 px-3 text-right">${fmt(r.avg_check)}</td>
-      </tr>
-    `).join('');
-    document.getElementById('historical-table-body').innerHTML = html;
-
-    // Update arrows
-    document.querySelectorAll('#historical-table th').forEach(th => {
-      const col = th.dataset.col;
-      const arrow = th.querySelector('.sort-arrow');
-      if (col === histSortCol) {
-        arrow.textContent = histSortAsc ? ' ▲' : ' ▼';
-      } else {
-        arrow.textContent = '';
-      }
-    });
-  }
-
-  document.querySelectorAll('#historical-table th').forEach(th => {
-    th.addEventListener('click', () => {
-      const col = th.dataset.col;
-      if (histSortCol === col) histSortAsc = !histSortAsc;
-      else { histSortCol = col; histSortAsc = true; }
-      renderHistorical();
-    });
+  if (chartDOW) chartDOW.destroy();
+  chartDOW = new Chart($('chartDOW'), {
+    type:'bar',
+    data:{
+      labels: avgByDow.map(d=>d.dow),
+      datasets:[
+        {label:'Dinner',data:avgByDow.map(d=>d.dinner),backgroundColor:'#e94560',borderRadius:4},
+        {label:'Lunch',data:avgByDow.map(d=>d.lunch),backgroundColor:'#00b4d8',borderRadius:4},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{stacked:true,ticks:{color:'#9ca3af'},grid:{color:'#0f3460'}},
+              y:{stacked:true,ticks:{color:'#9ca3af',callback:v=>'$'+v.toLocaleString()},grid:{color:'#0f3460'}}}}
   });
 
-  renderHistorical();
-});
-</script>
+  // Daypart pie
+  const totalLunch = HIST.reduce((s,r)=>s+r.lr,0);
+  const totalDinner = HIST.reduce((s,r)=>s+r.dr,0);
+  if (chartDaypart) chartDaypart.destroy();
+  chartDaypart = new Chart($('chartDaypart'), {
+    type:'doughnut',
+    data:{
+      labels:['Dinner (4–11pm)','Lunch (11am–3pm)'],
+      datasets:[{data:[totalDinner,totalLunch],backgroundColor:['#e94560','#00b4d8'],borderWidth:0}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{labels:{color:'#9ca3af'}},
+               tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.toLocaleString()+' ('+pct(ctx.parsed/(totalLunch+totalDinner)*100)+')'}}}
+    }
+  });
 
+  // Daily revenue
+  if (chartDaily) chartDaily.destroy();
+  chartDaily = new Chart($('chartDaily'), {
+    type:'bar',
+    data:{
+      labels: HIST.map(r=>r.date.slice(5)+' '+r.dow.slice(0,3)),
+      datasets:[
+        {label:'Dinner',data:HIST.map(r=>r.dr),backgroundColor:'#e94560',borderRadius:3},
+        {label:'Lunch',data:HIST.map(r=>r.lr),backgroundColor:'#00b4d8',borderRadius:3},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{stacked:true,ticks:{color:'#9ca3af',maxRotation:45},grid:{color:'#0f3460'}},
+              y:{stacked:true,ticks:{color:'#9ca3af',callback:v=>'$'+v.toLocaleString()},grid:{color:'#0f3460'}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FORECAST
+// ═══════════════════════════════════════════════════════════════
+function initForecast() {
+  const total = FORECAST.reduce((s,r)=>s+r.ft,0);
+  const totalCovers = FORECAST.reduce((s,r)=>s+r.dc,0);
+  const totalLabor = FORECAST.reduce((s,r)=>s+r.el,0);
+  const best = FORECAST.reduce((a,b)=>b.ft>a.ft?b:a);
+  $('fc-total').textContent = fmt(total);
+  $('fc-covers').textContent = totalCovers.toLocaleString();
+  $('fc-big-day').textContent = best.dow+' Apr '+best.date.slice(8);
+  $('fc-labor').textContent = fmt(totalLabor);
+
+  const tbody = $('forecast-table-body');
+  tbody.innerHTML = '';
+  FORECAST.forEach(f => {
+    const isWeekend = ['Friday','Saturday','Sunday'].includes(f.dow);
+    tbody.innerHTML += `
+    <tr class="border-b border-darkblue ${isWeekend?'text-white':'text-gray-300'}">
+      <td class="py-3 pr-4 font-medium">${f.date.slice(5)}</td>
+      <td class="py-3 pr-4">${f.dow}</td>
+      <td class="py-3 pr-4 text-right">
+        <span class="text-teal font-semibold">${f.dc}</span>
+        ${f.lc>0?`<span class="text-gray-500 text-xs"> +${f.lc}L</span>`:''}
+      </td>
+      <td class="py-3 pr-4 text-right">${fmt(f.fd)}</td>
+      <td class="py-3 pr-4 text-right">${fmt(f.fl)}</td>
+      <td class="py-3 pr-4 text-right font-bold text-white text-base">${fmt(f.ft)}</td>
+      <td class="py-3 pr-4 text-right text-gray-400 text-xs">${fmt(f.lo)}–${fmt(f.hi)}</td>
+      <td class="py-3 pr-4 text-right">${fmt(f.el)}</td>
+      <td class="py-3 text-right">${laborBadge(f.elp)}</td>
+    </tr>`;
+  });
+}
+
+let chartForecast;
+function renderForecastCharts() {
+  // Forecast bars with range
+  const HIST_DOW_AVG = {};
+  DOW_ORDER.forEach(d => {
+    const days = HIST.filter(r=>r.dow===d);
+    HIST_DOW_AVG[d] = days.reduce((s,r)=>s+r.tr,0)/Math.max(days.length,1);
+  });
+
+  if (chartForecast) chartForecast.destroy();
+  chartForecast = new Chart($('chartForecast'), {
+    type:'bar',
+    data:{
+      labels: FORECAST.map(f=>f.dow.slice(0,3)+' '+f.date.slice(8)),
+      datasets:[
+        {label:'Forecast',data:FORECAST.map(f=>f.ft),backgroundColor:FORECAST.map(f=>f.dc>150?'#e94560':'#00b4d8'),borderRadius:6},
+        {label:'Historical DOW Avg',data:FORECAST.map(f=>HIST_DOW_AVG[f.dow]||0),type:'line',borderColor:'#fbbf24',borderDash:[5,3],pointRadius:4,pointBackgroundColor:'#fbbf24',tension:0.3,fill:false},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#0f3460'}},
+              y:{ticks:{color:'#9ca3af',callback:v=>'$'+v.toLocaleString()},grid:{color:'#0f3460'}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LABOR
+// ═══════════════════════════════════════════════════════════════
+function initLabor() {
+  const totalLabor = HIST.reduce((s,r)=>s+r.llc+r.dlc,0);
+  const totalRev = HIST.reduce((s,r)=>s+r.tr,0);
+  const totalDinnerRev = HIST.reduce((s,r)=>s+r.dr,0);
+  const totalDinnerLabor = HIST.reduce((s,r)=>s+r.dlc,0);
+  const lunchDays = HIST.filter(r=>r.lr>100);
+  const avgLunchPct = lunchDays.reduce((s,r)=>s+(r.llc/r.lr*100),0)/Math.max(lunchDays.length,1);
+
+  $('lab-total').textContent = fmt(totalLabor);
+  $('lab-overall-pct').textContent = pct(totalLabor/totalRev*100);
+  $('lab-dinner-pct').textContent = pct(totalDinnerLabor/totalDinnerRev*100);
+  $('lab-lunch-pct').textContent = pct(avgLunchPct);
+  $('lab-lunch-alert-pct').textContent = pct(avgLunchPct);
+
+  const tbody = $('labor-table-body');
+  tbody.innerHTML = '';
+  HIST.forEach(r => {
+    const totalL = r.llc + r.dlc;
+    const laborPct = totalL/r.tr*100;
+    const dinnerPct = r.dlc/r.dr*100;
+    const lunchPct = r.lr>100 ? r.llc/r.lr*100 : null;
+    tbody.innerHTML += `
+    <tr class="border-b border-darkblue text-gray-300 hover:text-white">
+      <td class="py-2.5 pr-4">${r.date.slice(5)}</td>
+      <td class="py-2.5 pr-4">${r.dow}</td>
+      <td class="py-2.5 pr-4 text-right">${fmt(r.tr)}</td>
+      <td class="py-2.5 pr-4 text-right">${fmt(totalL)}</td>
+      <td class="py-2.5 pr-4 text-right">${laborBadge(laborPct)}</td>
+      <td class="py-2.5 pr-4 text-right">${fmt(r.dlc)}</td>
+      <td class="py-2.5 pr-4 text-right">${laborBadge(dinnerPct)}</td>
+      <td class="py-2.5 pr-4 text-right">${fmt(r.llc)}</td>
+      <td class="py-2.5 text-right">${lunchPct!=null?laborBadge(lunchPct):'<span class="text-gray-500">N/A</span>'}</td>
+    </tr>`;
+  });
+}
+
+let chartLaborPct, chartLaborDOW;
+function renderLaborCharts() {
+  if (chartLaborPct) chartLaborPct.destroy();
+  chartLaborPct = new Chart($('chartLaborPct'), {
+    type:'line',
+    data:{
+      labels: HIST.map(r=>r.date.slice(5)+' '+r.dow.slice(0,3)),
+      datasets:[
+        {label:'Total Labor %',data:HIST.map(r=>((r.llc+r.dlc)/r.tr*100).toFixed(1)),borderColor:'#e94560',backgroundColor:'rgba(233,69,96,0.1)',fill:true,tension:0.3,pointRadius:3},
+        {label:'Dinner Labor %',data:HIST.map(r=>(r.dlc/r.dr*100).toFixed(1)),borderColor:'#00b4d8',tension:0.3,pointRadius:3,borderDash:[4,2]},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af',maxRotation:45},grid:{color:'#0f3460'}},
+              y:{ticks:{color:'#9ca3af',callback:v=>v+'%'},grid:{color:'#0f3460'}}}}
+  });
+
+  // DOW avg labor pct
+  const dowLaborMap = {};
+  DOW_ORDER.forEach(d => dowLaborMap[d] = []);
+  HIST.forEach(r => { if(dowLaborMap[r.dow]) dowLaborMap[r.dow].push((r.llc+r.dlc)/r.tr*100); });
+  const avgLaborByDow = DOW_ORDER.map(d => {
+    const vals = dowLaborMap[d];
+    return vals.reduce((a,b)=>a+b,0)/Math.max(vals.length,1);
+  });
+
+  if (chartLaborDOW) chartLaborDOW.destroy();
+  chartLaborDOW = new Chart($('chartLaborDOW'), {
+    type:'bar',
+    data:{
+      labels: DOW_ORDER.map(d=>d.slice(0,3)),
+      datasets:[{label:'Avg Labor %',data:avgLaborByDow.map(v=>v.toFixed(1)),
+        backgroundColor: avgLaborByDow.map(v=>v<25?'#064e3b':v<40?'#78350f':'#7f1d1d'),
+        borderRadius:6}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'#0f3460'}},
+              y:{ticks:{color:'#9ca3af',callback:v=>v+'%'},grid:{color:'#0f3460'}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HISTORICAL TABLE
+// ═══════════════════════════════════════════════════════════════
+let histSortKey = 'date', histSortDir = 1;
+function sortHist(key) {
+  if (histSortKey === key) histSortDir *= -1;
+  else { histSortKey = key; histSortDir = 1; }
+  renderHistTable();
+}
+function renderHistTable() {
+  const data = [...HIST].sort((a,b) => {
+    let av, bv;
+    if (histSortKey==='date') { av=a.date; bv=b.date; }
+    else if (histSortKey==='dow') { av=a.dow; bv=b.dow; }
+    else if (histSortKey==='lr') { av=a.lr; bv=b.lr; }
+    else if (histSortKey==='dr') { av=a.dr; bv=b.dr; }
+    else if (histSortKey==='tr') { av=a.tr; bv=b.tr; }
+    else if (histSortKey==='dg') { av=a.dg; bv=b.dg; }
+    else if (histSortKey==='odc') { av=a.odc; bv=b.odc; }
+    else if (histSortKey==='labor') { av=a.llc+a.dlc; bv=b.llc+b.dlc; }
+    else if (histSortKey==='labor_pct') { av=(a.llc+a.dlc)/a.tr; bv=(b.llc+b.dlc)/b.tr; }
+    if (av<bv) return -histSortDir;
+    if (av>bv) return histSortDir;
+    return 0;
+  });
+
+  const tbody = $('hist-table-body');
+  tbody.innerHTML = '';
+  data.forEach(r => {
+    const totalL = r.llc + r.dlc;
+    const laborPct = totalL/r.tr*100;
+    tbody.innerHTML += `
+    <tr class="border-b border-darkblue text-gray-300 hover:text-white">
+      <td class="py-2.5 pr-4 font-medium">${r.date.slice(5)} <span class="text-gray-500 text-xs">${r.dow.slice(0,3)}</span></td>
+      <td class="py-2.5 pr-4">${r.dow}</td>
+      <td class="py-2.5 pr-4 text-right text-teal">${fmt(r.lr)}</td>
+      <td class="py-2.5 pr-4 text-right text-coral">${fmt(r.dr)}</td>
+      <td class="py-2.5 pr-4 text-right font-semibold text-white">${fmt(r.tr)}</td>
+      <td class="py-2.5 pr-4 text-right">${(r.lg+r.dg).toLocaleString()}</td>
+      <td class="py-2.5 pr-4 text-right">${r.odc}</td>
+      <td class="py-2.5 pr-4 text-right">${fmt(totalL)}</td>
+      <td class="py-2.5 text-right">${laborBadge(laborPct)}</td>
+    </tr>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+initOverview();
+renderOverviewCharts();
+initForecast();
+initLabor();
+renderHistTable();
+</script>
 </body>
 </html>
