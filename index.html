@@ -70,10 +70,12 @@
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Avg Dinner Check (OT)</p>
         <p class="text-2xl font-bold text-white" id="stat-avg-check"></p>
+        <p class="text-gray-500 text-xs mt-1" id="stat-dinner-split"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Avg Lunch Check (OT)</p>
         <p class="text-2xl font-bold text-white" id="stat-avg-lunch-check"></p>
+        <p class="text-gray-500 text-xs mt-1" id="stat-lunch-split"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Dinner Revenue %</p>
@@ -328,8 +330,13 @@ function initOverview() {
   $('stat-dinner-pct').textContent = pct(totalDinnerRev/totalRev*100);
   $('stat-total-labor').textContent = fmt(totalLabor);
   $('stat-labor-pct').textContent = pct(totalLabor/totalRev*100);
-  $('stat-avg-check').textContent = fmt(totalDinnerRev/totalDinnerOTCovers, 2);
-  $('stat-avg-lunch-check').textContent = fmt(totalLunchOTCovers > 0 ? totalLunchRev/totalLunchOTCovers : 0, 2);
+  const dinnerAvg = totalDinnerRev/totalDinnerOTCovers;
+  const lunchAvg = totalLunchOTCovers > 0 ? totalLunchRev/totalLunchOTCovers : 0;
+  $('stat-avg-check').textContent = fmt(dinnerAvg, 2);
+  $('stat-avg-lunch-check').textContent = fmt(lunchAvg, 2);
+  // Food vs beverage split from Silverware category report (March 2026)
+  $('stat-dinner-split').textContent = 'Food '+fmt(dinnerAvg*0.647,2)+' · Bar '+fmt(dinnerAvg*0.329,2);
+  $('stat-lunch-split').textContent = 'Food '+fmt(lunchAvg*0.634,2)+' · Bar '+fmt(lunchAvg*0.313,2);
   $('stat-best-day').textContent = bestDay.date.slice(5)+' ('+bestDay.dow.slice(0,3)+')';
 }
 
