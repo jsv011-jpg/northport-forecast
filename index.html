@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Northport Revenue Forecast</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  body { background: #1a1a2e; color: #e0e0e0; font-family: 'Inter', system-ui, sans-serif; }
+  .card { background: #16213e; border: 1px solid #0f3460; border-radius: 12px; }
+  .tab-btn { transition: all 0.2s; }
+  .tab-btn.active { background: #e94560; color: white; }
+  .tab-btn:not(.active):hover { background: #0f3460; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #1a1a2e; }
+  ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
+  table th { cursor: pointer; user-select: none; }
+  table th:hover { color: #e94560; }
+  .sort-arrow { font-size: 0.7em; margin-left: 4px; }
+</style>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        navy: '#1a1a2e',
+        card: '#16213e',
+        border: '#0f3460',
+        coral: '#e94560',
+        teal: '#00b4d8',
+        darkblue: '#0f3460',
+      }
+    }
+  }
+}
+</script>
+</head>
+<body class="min-h-screen">
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-white mb-2">Northport Revenue Forecast</h1>
+    <p class="text-gray-400 text-lg">March 2026 Performance & 14-Day Outlook</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex justify-center gap-2 mb-8">
+    <button class="tab-btn active px-6 py-2.5 rounded-lg font-semibold text-sm" onclick="switchTab('overview')" id="tab-overview">Overview</button>
+    <button class="tab-btn px-6 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('forecast')" id="tab-forecast">Forecast</button>
+    <button class="tab-btn px-6 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('historical')" id="tab-historical">Historical</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="panel-overview">
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="card p-5">
+        <p class="text-gray-400 text-sm mb-1">Total Revenue</p>
+        <p class="text-3xl font-bold text-white" id="stat-total-rev"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-sm mb-1">Avg Daily Revenue</p>
+        <p class="text-3xl font-bold text-white" id="stat-avg-rev"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-sm mb-1">Total Guests</p>
+        <p class="text-3xl font-bold text-white" id="stat-total-guests"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-sm mb-1">Dinner Revenue %</p>
+        <p class="text-3xl font-bold text-coral" id="stat-dinner-pct"></p>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card p-6 mb-8">
+      <h2 class="text-xl font-semibold text-white mb-4">Average Revenue by Day of Week</h2>
+      <div style="height: 350px;"><canvas id="chartDayOfWeek"></canvas></div>
+    </div>
+
+    <!-- Top 5 -->
+    <div class="card p-6">
+      <h2 class="text-xl font-semibold text-white mb-4">Top 5 Revenue Days</h2>
+      <div id="top5-list"></div>
+    </div>
+  </div>
+
+  <!-- Forecast Tab -->
+  <div id="panel-forecast" class="hidden">
+    <div class="card p-5 mb-8 inline-block">
+      <p class="text-gray-400 text-sm mb-1">Forecasted 2-Week Total</p>
+      <p class="text-3xl font-bold text-coral" id="stat-forecast-total"></p>
+    </div>
+
+    <div class="card p-6 mb-8">
+      <h2 class="text-xl font-semibold text-white mb-4">14-Day Revenue Forecast</h2>
+      <div style="height: 350px;"><canvas id="chartForecast"></canvas></div>
+    </div>
+
+    <div class="card p-6 overflow-x-auto">
+      <h2 class="text-xl font-semibold text-white mb-4">Forecast Details</h2>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-gray-400 border-b border-gray-700">
+            <th class="text-left py-3 px-3">Date</th>
+            <th class="text-left py-3 px-3">Day</th>
+            <th class="text-right py-3 px-3">Lunch Forecast</th>
+            <th class="text-right py-3 px-3">Dinner Forecast</th>
+            <th class="text-right py-3 px-3">Total Forecast</th>
+          </tr>
+        </thead>
+        <tbody id="forecast-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Historical Tab -->
+  <div id="panel-historical" class="hidden">
+    <div class="card p-6 overflow-x-auto">
+      <h2 class="text-xl font-semibold text-white mb-4">All Historical Days</h2>
+      <table class="w-full text-sm" id="historical-table">
+        <thead>
+          <tr class="text-gray-400 border-b border-gray-700">
+            <th class="text-left py-3 px-3" data-col="date">Date <span class="sort-arrow"></span></th>
+            <th class="text-left py-3 px-3" data-col="day_of_week">Day <span class="sort-arrow"></span></th>
+            <th class="text-right py-3 px-3" data-col="lunch_revenue">Lunch Rev <span class="sort-arrow"></span></th>
+            <th class="text-right py-3 px-3" data-col="dinner_revenue">Dinner Rev <span class="sort-arrow"></span></th>
+            <th class="text-right py-3 px-3" data-col="total_revenue">Total Rev <span class="sort-arrow"></span></th>
+            <th class="text-right py-3 px-3" data-col="guests">Guests <span class="sort-arrow"></span></th>
+            <th class="text-right py-3 px-3" data-col="avg_check">Avg Check <span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="historical-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"date":"2026-03-01","day_of_week":"Sunday","week_num":1,"lunch_revenue":7968,"dinner_revenue":17871,"total_revenue":25839,"lunch_guests":168,"dinner_guests":216,"lunch_checks":49,"dinner_checks":84},{"date":"2026-03-02","day_of_week":"Monday","week_num":1,"lunch_revenue":447,"dinner_revenue":1875,"total_revenue":2322,"lunch_guests":10,"dinner_guests":28,"lunch_checks":5,"dinner_checks":13},{"date":"2026-03-03","day_of_week":"Tuesday","week_num":1,"lunch_revenue":271,"dinner_revenue":5231,"total_revenue":5502,"lunch_guests":7,"dinner_guests":89,"lunch_checks":2,"dinner_checks":21},{"date":"2026-03-04","day_of_week":"Wednesday","week_num":1,"lunch_revenue":153,"dinner_revenue":7787,"total_revenue":7940,"lunch_guests":9,"dinner_guests":96,"lunch_checks":2,"dinner_checks":36},{"date":"2026-03-05","day_of_week":"Thursday","week_num":1,"lunch_revenue":711,"dinner_revenue":8602,"total_revenue":9313,"lunch_guests":9,"dinner_guests":97,"lunch_checks":3,"dinner_checks":31},{"date":"2026-03-06","day_of_week":"Friday","week_num":1,"lunch_revenue":0,"dinner_revenue":18796,"total_revenue":18796,"lunch_guests":1,"dinner_guests":217,"lunch_checks":0,"dinner_checks":84},{"date":"2026-03-07","day_of_week":"Saturday","week_num":1,"lunch_revenue":1911,"dinner_revenue":28456.5,"total_revenue":30367.5,"lunch_guests":45,"dinner_guests":333,"lunch_checks":15,"dinner_checks":130},{"date":"2026-03-08","day_of_week":"Sunday","week_num":2,"lunch_revenue":3615,"dinner_revenue":10085.5,"total_revenue":13700.5,"lunch_guests":71,"dinner_guests":128,"lunch_checks":17,"dinner_checks":40},{"date":"2026-03-09","day_of_week":"Monday","week_num":2,"lunch_revenue":746,"dinner_revenue":2722,"total_revenue":3468,"lunch_guests":13,"dinner_guests":39,"lunch_checks":5,"dinner_checks":16},{"date":"2026-03-10","day_of_week":"Tuesday","week_num":2,"lunch_revenue":440,"dinner_revenue":9082,"total_revenue":9522,"lunch_guests":11,"dinner_guests":102,"lunch_checks":5,"dinner_checks":34},{"date":"2026-03-11","day_of_week":"Wednesday","week_num":2,"lunch_revenue":0,"dinner_revenue":3574,"total_revenue":3574,"lunch_guests":1,"dinner_guests":46,"lunch_checks":0,"dinner_checks":26},{"date":"2026-03-12","day_of_week":"Thursday","week_num":2,"lunch_revenue":1081,"dinner_revenue":9350,"total_revenue":10431,"lunch_guests":13,"dinner_guests":114,"lunch_checks":5,"dinner_checks":55},{"date":"2026-03-13","day_of_week":"Friday","week_num":2,"lunch_revenue":892,"dinner_revenue":21666,"total_revenue":22558,"lunch_guests":22,"dinner_guests":241,"lunch_checks":7,"dinner_checks":94},{"date":"2026-03-14","day_of_week":"Saturday","week_num":2,"lunch_revenue":1530,"dinner_revenue":32151,"total_revenue":33681,"lunch_guests":36,"dinner_guests":374,"lunch_checks":12,"dinner_checks":165},{"date":"2026-03-15","day_of_week":"Sunday","week_num":3,"lunch_revenue":5795,"dinner_revenue":13588.5,"total_revenue":19383.5,"lunch_guests":120,"dinner_guests":181,"lunch_checks":43,"dinner_checks":50},{"date":"2026-03-16","day_of_week":"Monday","week_num":3,"lunch_revenue":154,"dinner_revenue":7746,"total_revenue":7900,"lunch_guests":3,"dinner_guests":103,"lunch_checks":1,"dinner_checks":37},{"date":"2026-03-17","day_of_week":"Tuesday","week_num":3,"lunch_revenue":1360,"dinner_revenue":10758.02,"total_revenue":12118.02,"lunch_guests":25,"dinner_guests":154,"lunch_checks":9,"dinner_checks":49},{"date":"2026-03-18","day_of_week":"Wednesday","week_num":3,"lunch_revenue":1426,"dinner_revenue":5459,"total_revenue":6885,"lunch_guests":21,"dinner_guests":65,"lunch_checks":7,"dinner_checks":22},{"date":"2026-03-19","day_of_week":"Thursday","week_num":3,"lunch_revenue":650,"dinner_revenue":11918.01,"total_revenue":12568.01,"lunch_guests":13,"dinner_guests":155,"lunch_checks":6,"dinner_checks":52},{"date":"2026-03-20","day_of_week":"Friday","week_num":3,"lunch_revenue":575,"dinner_revenue":25252.01,"total_revenue":25827.01,"lunch_guests":14,"dinner_guests":290,"lunch_checks":5,"dinner_checks":121},{"date":"2026-03-21","day_of_week":"Saturday","week_num":3,"lunch_revenue":2064,"dinner_revenue":35640.51,"total_revenue":37704.51,"lunch_guests":43,"dinner_guests":382,"lunch_checks":17,"dinner_checks":150},{"date":"2026-03-22","day_of_week":"Sunday","week_num":4,"lunch_revenue":5045,"dinner_revenue":15243.5,"total_revenue":20288.5,"lunch_guests":107,"dinner_guests":182,"lunch_checks":27,"dinner_checks":66},{"date":"2026-03-23","day_of_week":"Monday","week_num":4,"lunch_revenue":454,"dinner_revenue":4954,"total_revenue":5408,"lunch_guests":11,"dinner_guests":55,"lunch_checks":5,"dinner_checks":22},{"date":"2026-03-24","day_of_week":"Tuesday","week_num":4,"lunch_revenue":469,"dinner_revenue":4467,"total_revenue":4936,"lunch_guests":9,"dinner_guests":56,"lunch_checks":4,"dinner_checks":28},{"date":"2026-03-25","day_of_week":"Wednesday","week_num":4,"lunch_revenue":1944,"dinner_revenue":11375,"total_revenue":13319,"lunch_guests":91,"dinner_guests":144,"lunch_checks":24,"dinner_checks":58},{"date":"2026-03-26","day_of_week":"Thursday","week_num":4,"lunch_revenue":1103,"dinner_revenue":8854,"total_revenue":9957,"lunch_guests":22,"dinner_guests":113,"lunch_checks":9,"dinner_checks":53},{"date":"2026-03-27","day_of_week":"Friday","week_num":4,"lunch_revenue":517,"dinner_revenue":22672,"total_revenue":23189,"lunch_guests":11,"dinner_guests":259,"lunch_checks":6,"dinner_checks":113},{"date":"2026-03-28","day_of_week":"Saturday","week_num":4,"lunch_revenue":3333,"dinner_revenue":33972,"total_revenue":37305,"lunch_guests":70,"dinner_guests":387,"lunch_checks":21,"dinner_checks":187}];
+
+// Utility functions
+const fmt = (n) => '$' + Math.round(n).toLocaleString('en-US');
+const fmtDate = (d) => { const dt = new Date(d + 'T12:00:00'); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+
+// Compute averages by day of week
+const DAYS_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function avgByDay() {
+  const acc = {};
+  DAYS_ORDER.forEach(d => acc[d] = { lunch: [], dinner: [] });
+  DATA.forEach(r => {
+    acc[r.day_of_week].lunch.push(r.lunch_revenue);
+    acc[r.day_of_week].dinner.push(r.dinner_revenue);
+  });
+  const result = {};
+  DAYS_ORDER.forEach(d => {
+    result[d] = {
+      lunch: acc[d].lunch.reduce((a,b)=>a+b,0) / acc[d].lunch.length,
+      dinner: acc[d].dinner.reduce((a,b)=>a+b,0) / acc[d].dinner.length
+    };
+  });
+  return result;
+}
+
+// Generate forecast
+function generateForecast() {
+  const avgs = avgByDay();
+  const forecast = [];
+  const startDate = new Date('2026-03-29T12:00:00');
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const dayName = DAYS_ORDER[d.getDay()];
+    const dateStr = d.toISOString().split('T')[0];
+    forecast.push({
+      date: dateStr,
+      day_of_week: dayName,
+      lunch: Math.round(avgs[dayName].lunch),
+      dinner: Math.round(avgs[dayName].dinner),
+      total: Math.round(avgs[dayName].lunch + avgs[dayName].dinner)
+    });
+  }
+  return forecast;
+}
+
+// Tab switching
+function switchTab(tab) {
+  ['overview','forecast','historical'].forEach(t => {
+    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
+    const btn = document.getElementById('tab-' + t);
+    btn.classList.toggle('active', t === tab);
+    btn.classList.toggle('text-gray-400', t !== tab);
+  });
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  // Stats
+  const totalRev = DATA.reduce((s,r) => s + r.total_revenue, 0);
+  const totalDinner = DATA.reduce((s,r) => s + r.dinner_revenue, 0);
+  const totalGuests = DATA.reduce((s,r) => s + r.lunch_guests + r.dinner_guests, 0);
+  document.getElementById('stat-total-rev').textContent = fmt(totalRev);
+  document.getElementById('stat-avg-rev').textContent = fmt(totalRev / DATA.length);
+  document.getElementById('stat-total-guests').textContent = totalGuests.toLocaleString();
+  document.getElementById('stat-dinner-pct').textContent = Math.round(totalDinner / totalRev * 100) + '%';
+
+  // Day of week chart
+  const avgs = avgByDay();
+  new Chart(document.getElementById('chartDayOfWeek'), {
+    type: 'bar',
+    data: {
+      labels: DAYS_ORDER.map(d => d.slice(0,3)),
+      datasets: [
+        { label: 'Lunch', data: DAYS_ORDER.map(d => Math.round(avgs[d].lunch)), backgroundColor: '#e94560', borderRadius: 4 },
+        { label: 'Dinner', data: DAYS_ORDER.map(d => Math.round(avgs[d].dinner)), backgroundColor: '#00b4d8', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#e0e0e0', font: { size: 13 } } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.parsed.y) } }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#9ca3af' }, grid: { display: false } },
+        y: { stacked: true, ticks: { color: '#9ca3af', callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: '#ffffff10' } }
+      }
+    }
+  });
+
+  // Top 5
+  const sorted = [...DATA].sort((a,b) => b.total_revenue - a.total_revenue).slice(0,5);
+  const top5Html = sorted.map((r, i) => `
+    <div class="flex justify-between items-center py-3 ${i < 4 ? 'border-b border-gray-700/50' : ''}">
+      <div class="flex items-center gap-3">
+        <span class="text-coral font-bold text-lg w-6">${i+1}</span>
+        <div>
+          <p class="text-white font-medium">${fmtDate(r.date)} (${r.day_of_week})</p>
+          <p class="text-gray-400 text-xs">L: ${fmt(r.lunch_revenue)} · D: ${fmt(r.dinner_revenue)}</p>
+        </div>
+      </div>
+      <span class="text-white font-bold text-lg">${fmt(r.total_revenue)}</span>
+    </div>
+  `).join('');
+  document.getElementById('top5-list').innerHTML = top5Html;
+
+  // Forecast
+  const forecast = generateForecast();
+  const forecastTotal = forecast.reduce((s,r) => s + r.total, 0);
+  document.getElementById('stat-forecast-total').textContent = fmt(forecastTotal);
+
+  new Chart(document.getElementById('chartForecast'), {
+    type: 'line',
+    data: {
+      labels: forecast.map(f => fmtDate(f.date)),
+      datasets: [
+        { label: 'Total', data: forecast.map(f => f.total), borderColor: '#e94560', backgroundColor: '#e9456020', fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#e94560' },
+        { label: 'Dinner', data: forecast.map(f => f.dinner), borderColor: '#00b4d8', borderDash: [5,5], tension: 0.3, pointRadius: 3, pointBackgroundColor: '#00b4d8' },
+        { label: 'Lunch', data: forecast.map(f => f.lunch), borderColor: '#e94560', borderDash: [5,5], tension: 0.3, pointRadius: 3, pointBackgroundColor: '#e94560', borderWidth: 1.5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#e0e0e0' } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.parsed.y) } }
+      },
+      scales: {
+        x: { ticks: { color: '#9ca3af', maxRotation: 45 }, grid: { display: false } },
+        y: { ticks: { color: '#9ca3af', callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: '#ffffff10' } }
+      }
+    }
+  });
+
+  // Forecast table
+  const ftBody = forecast.map(f => `
+    <tr class="border-b border-gray-700/30 hover:bg-white/5">
+      <td class="py-2.5 px-3">${fmtDate(f.date)}</td>
+      <td class="py-2.5 px-3">${f.day_of_week}</td>
+      <td class="py-2.5 px-3 text-right">${fmt(f.lunch)}</td>
+      <td class="py-2.5 px-3 text-right">${fmt(f.dinner)}</td>
+      <td class="py-2.5 px-3 text-right font-semibold text-white">${fmt(f.total)}</td>
+    </tr>
+  `).join('');
+  document.getElementById('forecast-table-body').innerHTML = ftBody;
+
+  // Historical table
+  let histSortCol = 'date', histSortAsc = true;
+  const enriched = DATA.map(r => ({
+    ...r,
+    guests: r.lunch_guests + r.dinner_guests,
+    avg_check: (r.lunch_checks + r.dinner_checks) > 0 ? r.total_revenue / (r.lunch_checks + r.dinner_checks) : 0
+  }));
+
+  function renderHistorical() {
+    const data = [...enriched].sort((a,b) => {
+      let va = a[histSortCol], vb = b[histSortCol];
+      if (typeof va === 'string') return histSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+      return histSortAsc ? va - vb : vb - va;
+    });
+    const html = data.map(r => `
+      <tr class="border-b border-gray-700/30 hover:bg-white/5">
+        <td class="py-2.5 px-3">${fmtDate(r.date)}</td>
+        <td class="py-2.5 px-3">${r.day_of_week}</td>
+        <td class="py-2.5 px-3 text-right">${fmt(r.lunch_revenue)}</td>
+        <td class="py-2.5 px-3 text-right">${fmt(r.dinner_revenue)}</td>
+        <td class="py-2.5 px-3 text-right font-semibold text-white">${fmt(r.total_revenue)}</td>
+        <td class="py-2.5 px-3 text-right">${r.guests.toLocaleString()}</td>
+        <td class="py-2.5 px-3 text-right">${fmt(r.avg_check)}</td>
+      </tr>
+    `).join('');
+    document.getElementById('historical-table-body').innerHTML = html;
+
+    // Update arrows
+    document.querySelectorAll('#historical-table th').forEach(th => {
+      const col = th.dataset.col;
+      const arrow = th.querySelector('.sort-arrow');
+      if (col === histSortCol) {
+        arrow.textContent = histSortAsc ? ' ▲' : ' ▼';
+      } else {
+        arrow.textContent = '';
+      }
+    });
+  }
+
+  document.querySelectorAll('#historical-table th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (histSortCol === col) histSortAsc = !histSortAsc;
+      else { histSortCol = col; histSortAsc = true; }
+      renderHistorical();
+    });
+  });
+
+  renderHistorical();
+});
+</script>
+
+</body>
+</html>
