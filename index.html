@@ -62,14 +62,18 @@
         <p class="text-2xl font-bold text-coral" id="stat-labor-pct"></p>
       </div>
     </div>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
       <div class="card p-5">
-        <p class="text-gray-400 text-xs mb-1">Total Guests</p>
+        <p class="text-gray-400 text-xs mb-1">Total Guests (POS)</p>
         <p class="text-2xl font-bold text-white" id="stat-total-guests"></p>
       </div>
       <div class="card p-5">
-        <p class="text-gray-400 text-xs mb-1">Avg Dinner Check (OT Covers)</p>
+        <p class="text-gray-400 text-xs mb-1">Avg Dinner Check (OT)</p>
         <p class="text-2xl font-bold text-white" id="stat-avg-check"></p>
+      </div>
+      <div class="card p-5">
+        <p class="text-gray-400 text-xs mb-1">Avg Lunch Check (OT)</p>
+        <p class="text-2xl font-bold text-white" id="stat-avg-lunch-check"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Dinner Revenue %</p>
@@ -312,7 +316,9 @@ function initOverview() {
   const totalRev = HIST.reduce((s,r)=>s+r.tr, 0);
   const totalGuests = HIST.reduce((s,r)=>s+r.lg+r.dg, 0);
   const totalDinnerRev = HIST.reduce((s,r)=>s+r.dr, 0);
+  const totalLunchRev = HIST.reduce((s,r)=>s+r.lr, 0);
   const totalDinnerOTCovers = HIST.reduce((s,r)=>s+(r.odc||0), 0);
+  const totalLunchOTCovers = HIST.reduce((s,r)=>s+(r.olc||0), 0);
   const totalLabor = HIST.reduce((s,r)=>s+r.llc+r.dlc, 0);
   const bestDay = HIST.reduce((a,b)=>b.tr>a.tr?b:a);
 
@@ -323,6 +329,7 @@ function initOverview() {
   $('stat-total-labor').textContent = fmt(totalLabor);
   $('stat-labor-pct').textContent = pct(totalLabor/totalRev*100);
   $('stat-avg-check').textContent = fmt(totalDinnerRev/totalDinnerOTCovers, 2);
+  $('stat-avg-lunch-check').textContent = fmt(totalLunchOTCovers > 0 ? totalLunchRev/totalLunchOTCovers : 0, 2);
   $('stat-best-day').textContent = bestDay.date.slice(5)+' ('+bestDay.dow.slice(0,3)+')';
 }
 
