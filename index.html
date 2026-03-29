@@ -40,6 +40,7 @@
     <button class="tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('forecast')" id="tab-forecast">🔮 Forecast</button>
     <button class="tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('labor')" id="tab-labor">👥 Labor</button>
     <button class="tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('historical')" id="tab-historical">📅 Historical</button>
+    <button class="tab-btn px-5 py-2.5 rounded-lg font-semibold text-sm text-gray-400" onclick="switchTab('weekly')" id="tab-weekly">📋 Weekly Summary</button>
   </div>
 
   <!-- ═══════════════ OVERVIEW TAB ═══════════════ -->
@@ -257,6 +258,63 @@
     </div>
   </div>
 
+  <!-- ═══════════════ WEEKLY SUMMARY TAB ═══════════════ -->
+  <div id="panel-weekly" class="hidden">
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="card p-4">
+        <p class="text-gray-400 text-xs mb-1">YTD Revenue</p>
+        <p class="text-2xl font-bold text-white" id="wk-ytd-rev">—</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-gray-400 text-xs mb-1">Avg Weekly Revenue</p>
+        <p class="text-2xl font-bold text-white" id="wk-avg-rev">—</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-gray-400 text-xs mb-1">Avg Prime Cost %</p>
+        <p class="text-2xl font-bold" id="wk-avg-prime">—</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-gray-400 text-xs mb-1">Avg Food Cost % <span class="text-gray-500">(of food rev)</span></p>
+        <p class="text-2xl font-bold" id="wk-avg-food">—</p>
+      </div>
+    </div>
+
+    <!-- Revenue Trend Chart -->
+    <div class="card p-6 mb-6">
+      <h2 class="text-lg font-semibold text-white mb-4">Weekly Revenue &amp; Prime Cost Trend</h2>
+      <div style="height:260px"><canvas id="chartWeekly"></canvas></div>
+    </div>
+
+    <!-- Weekly Table -->
+    <div class="card p-6 overflow-x-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-white">Week-by-Week Performance</h2>
+        <span class="text-xs text-gray-500">Prime Cost = Labor + Food + Bev Purchases ÷ Revenue</span>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-gray-400 text-left border-b border-darkblue">
+            <th class="pb-3 pr-4">Week</th>
+            <th class="pb-3 pr-4">Dates</th>
+            <th class="pb-3 pr-4 text-right">Revenue</th>
+            <th class="pb-3 pr-4 text-right">Food Rev</th>
+            <th class="pb-3 pr-4 text-right">FOH Labor %</th>
+            <th class="pb-3 pr-4 text-right">BOH Labor %</th>
+            <th class="pb-3 pr-4 text-right">Food Cost $</th>
+            <th class="pb-3 pr-4 text-right">Food Cost %<br><span class="text-gray-500 font-normal">(of food rev)</span></th>
+            <th class="pb-3 pr-4 text-right">Bev Cost %</th>
+            <th class="pb-3 pr-4 text-right font-semibold text-white">Prime Cost %</th>
+            <th class="pb-3 text-left text-gray-500">Notes</th>
+          </tr>
+        </thead>
+        <tbody id="weekly-table-body"></tbody>
+      </table>
+      <p class="text-gray-500 text-xs mt-4">* Week 13 revenue &amp; labor auto-calculated from daily sales data (Mon–Sat). Food purchases pending.</p>
+    </div>
+  </div>
+
 </div><!-- end container -->
 
 <script>
@@ -292,6 +350,25 @@ const HIST = [
   {date:"2026-03-26",dow:"Thursday",lr:1103,dr:8854,tr:9957,lg:22,dg:113,olc:21,odc:75,llc:824.16,dlc:1983.64},
   {date:"2026-03-27",dow:"Friday",lr:517,dr:22672,tr:23189,lg:11,dg:259,olc:19,odc:192,llc:860.12,dlc:2495.43},
   {date:"2026-03-28",dow:"Saturday",lr:3333,dr:33972,tr:37305,lg:70,dg:387,olc:58,odc:284,llc:1161.78,dlc:2466.87},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// WEEKLY SUMMARY DATA  (update by uploading new CSV)
+// ═══════════════════════════════════════════════════════════════
+const WEEKLY = [
+  {w:"Week 1",  dates:"12/29–1/4",  rev:194823, foodRev:120471, fohPct:8.82,  bohPct:13.05, foodPurchases:46623, foodCostPct:38.70, bevPct:3.41,  primeCostPct:49.22, notes:""},
+  {w:"Week 2",  dates:"1/5–1/11",   rev:101747, foodRev:70000,  fohPct:11.80, bohPct:20.95, foodPurchases:26589, foodCostPct:37.98, bevPct:16.69, primeCostPct:75.57, notes:""},
+  {w:"Week 3",  dates:"1/12–1/18",  rev:112067, foodRev:74587,  fohPct:13.12, bohPct:19.98, foodPurchases:30639, foodCostPct:41.08, bevPct:0.87,  primeCostPct:61.31, notes:"Moved Porters to FOH"},
+  {w:"Week 4",  dates:"1/19–1/25",  rev:92505,  foodRev:59647,  fohPct:12.71, bohPct:21.37, foodPurchases:26435, foodCostPct:44.32, bevPct:9.46,  primeCostPct:72.11, notes:""},
+  {w:"Week 5",  dates:"1/26–2/1",   rev:117137, foodRev:75519,  fohPct:12.02, bohPct:19.47, foodPurchases:19391, foodCostPct:25.68, bevPct:-0.02, primeCostPct:48.02, notes:"Inventory adjustments"},
+  {w:"Week 6",  dates:"2/2–2/8",    rev:111517, foodRev:73001,  fohPct:13.40, bohPct:20.10, foodPurchases:25137, foodCostPct:34.43, bevPct:4.59,  primeCostPct:60.63, notes:"Harassment course pay $660"},
+  {w:"Week 7",  dates:"2/9–2/15",   rev:183710, foodRev:133220, fohPct:9.50,  bohPct:12.76, foodPurchases:43805, foodCostPct:32.88, bevPct:3.84,  primeCostPct:49.95, notes:""},
+  {w:"Week 8",  dates:"2/16–2/22",  rev:106833, foodRev:69668,  fohPct:11.53, bohPct:19.00, foodPurchases:30591, foodCostPct:43.91, bevPct:3.98,  primeCostPct:63.15, notes:"Snow day – no dinner Sunday"},
+  {w:"Week 9",  dates:"2/23–3/1",   rev:113166, foodRev:73917,  fohPct:11.91, bohPct:17.66, foodPurchases:25392, foodCostPct:34.35, bevPct:13.80, primeCostPct:65.81, notes:"Inventory adj incl. $144 PTO in FOH"},
+  {w:"Week 10", dates:"3/2–3/8",    rev:96052,  foodRev:61763,  fohPct:13.09, bohPct:21.48, foodPurchases:29982, foodCostPct:48.54, bevPct:2.60,  primeCostPct:68.38, notes:""},
+  {w:"Week 11", dates:"3/9–3/15",   rev:110442, foodRev:72182,  fohPct:13.24, bohPct:18.18, foodPurchases:25999, foodCostPct:36.02, bevPct:5.64,  primeCostPct:60.61, notes:""},
+  {w:"Week 12", dates:"3/16–3/22",  rev:130960, foodRev:87665,  fohPct:12.19, bohPct:15.79, foodPurchases:32119, foodCostPct:36.64, bevPct:5.55,  primeCostPct:58.05, notes:""},
+  {w:"Week 13", dates:"3/23–3/29",  rev:94114,  foodRev:61174,  fohPct:5.82,  bohPct:12.18, foodPurchases:null,  foodCostPct:null,  bevPct:null,  primeCostPct:null,  notes:"Food cost pending", partial:true},
 ];
 
 const FORECAST = [
@@ -347,6 +424,7 @@ function switchTab(name) {
   if (name === 'overview') renderOverviewCharts();
   if (name === 'forecast') renderForecastCharts();
   if (name === 'labor') renderLaborCharts();
+  if (name === 'weekly') renderWeeklyChart();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -623,6 +701,7 @@ function sortHist(key) {
   if (histSortKey === key) histSortDir *= -1;
   else { histSortKey = key; histSortDir = 1; }
   renderHistTable();
+  renderWeekly();
 }
 function renderHistTable() {
   const data = [...HIST].sort((a,b) => {
@@ -662,6 +741,123 @@ function renderHistTable() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// WEEKLY SUMMARY RENDER
+// ═══════════════════════════════════════════════════════════════
+function primeCostColor(v) {
+  if (v === null) return 'text-gray-500';
+  if (v < 55)  return 'text-green-400';
+  if (v < 65)  return 'text-teal-400';
+  if (v < 75)  return 'text-yellow-400';
+  return 'text-red-400';
+}
+function foodCostColorW(v) {
+  if (v === null) return 'text-gray-500';
+  if (v < 33)  return 'text-green-400';
+  if (v < 40)  return 'text-teal-400';
+  if (v < 46)  return 'text-yellow-400';
+  return 'text-red-400';
+}
+function laborPctColorW(v) {
+  if (v === null) return 'text-gray-500';
+  if (v < 14)  return 'text-green-400';
+  if (v < 18)  return 'text-teal-400';
+  if (v < 22)  return 'text-yellow-400';
+  return 'text-red-400';
+}
+
+let weeklyChartInst = null;
+function renderWeekly() {
+  const filled = WEEKLY.filter(w => w.primeCostPct !== null);
+  const totalRev = WEEKLY.reduce((s,w) => s + w.rev, 0);
+  const avgRev = totalRev / WEEKLY.length;
+  const avgPrime = filled.reduce((s,w) => s + w.primeCostPct, 0) / filled.length;
+  const foodFilled = WEEKLY.filter(w => w.foodCostPct !== null);
+  const avgFood = foodFilled.reduce((s,w) => s + w.foodCostPct, 0) / foodFilled.length;
+
+  $('wk-ytd-rev').textContent = '$' + Math.round(totalRev).toLocaleString();
+  $('wk-avg-rev').textContent = '$' + Math.round(avgRev).toLocaleString();
+
+  const primeEl = $('wk-avg-prime');
+  primeEl.textContent = avgPrime.toFixed(1) + '%';
+  primeEl.className = 'text-2xl font-bold ' + primeCostColor(avgPrime);
+
+  const foodEl = $('wk-avg-food');
+  foodEl.textContent = avgFood.toFixed(1) + '%';
+  foodEl.className = 'text-2xl font-bold ' + foodCostColorW(avgFood);
+
+  const tbody = $('weekly-table-body');
+  tbody.innerHTML = WEEKLY.map(w => {
+    const foh = w.fohPct  !== null ? `<span class="${laborPctColorW(w.fohPct)}">${w.fohPct.toFixed(1)}%</span>`  : '<span class="text-gray-600">—</span>';
+    const boh = w.bohPct  !== null ? `<span class="${laborPctColorW(w.bohPct)}">${w.bohPct.toFixed(1)}%</span>`  : '<span class="text-gray-600">—</span>';
+    const fp  = w.foodPurchases !== null ? '$'+Math.round(w.foodPurchases).toLocaleString() : '<span class="text-gray-600">Pending</span>';
+    const fc  = w.foodCostPct !== null ? `<span class="${foodCostColorW(w.foodCostPct)}">${w.foodCostPct.toFixed(1)}%</span>` : '<span class="text-gray-600">—</span>';
+    const bev = w.bevPct !== null ? w.bevPct.toFixed(1)+'%' : '<span class="text-gray-600">—</span>';
+    const pc  = w.primeCostPct !== null
+      ? `<span class="${primeCostColor(w.primeCostPct)} font-semibold">${w.primeCostPct.toFixed(1)}%</span>`
+      : '<span class="text-yellow-400 font-semibold text-xs">Pending</span>';
+    const rowClass = w.partial ? 'border-t border-yellow-800/40 bg-yellow-900/10' : 'border-t border-darkblue';
+    return `<tr class="${rowClass}">
+      <td class="py-2.5 pr-4 text-white font-medium">${w.w}${w.partial ? ' <span class="text-yellow-500 text-xs">●</span>' : ''}</td>
+      <td class="py-2.5 pr-4 text-gray-400 text-xs whitespace-nowrap">${w.dates}</td>
+      <td class="py-2.5 pr-4 text-right text-white">$${w.rev.toLocaleString()}</td>
+      <td class="py-2.5 pr-4 text-right text-gray-300">$${w.foodRev.toLocaleString()}</td>
+      <td class="py-2.5 pr-4 text-right">${foh}</td>
+      <td class="py-2.5 pr-4 text-right">${boh}</td>
+      <td class="py-2.5 pr-4 text-right text-gray-300">${fp}</td>
+      <td class="py-2.5 pr-4 text-right">${fc}</td>
+      <td class="py-2.5 pr-4 text-right text-gray-400">${bev}</td>
+      <td class="py-2.5 pr-4 text-right">${pc}</td>
+      <td class="py-2.5 text-xs text-gray-500">${w.notes}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderWeeklyChart() {
+  const ctx = document.getElementById('chartWeekly').getContext('2d');
+  if (weeklyChartInst) { weeklyChartInst.destroy(); weeklyChartInst = null; }
+  const labels   = WEEKLY.map(w => w.w);
+  const revData  = WEEKLY.map(w => w.rev);
+  const primeData = WEEKLY.map(w => w.primeCostPct);
+  weeklyChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Weekly Revenue',
+          data: revData,
+          backgroundColor: 'rgba(0,180,216,0.45)',
+          borderColor: '#00b4d8',
+          borderWidth: 1,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Prime Cost %',
+          data: primeData,
+          type: 'line',
+          borderColor: '#e94560',
+          backgroundColor: 'rgba(233,69,96,0.08)',
+          borderWidth: 2,
+          pointRadius: 5,
+          pointBackgroundColor: primeData.map(v => v===null?'#6b7280': v<55?'#4ade80':v<65?'#00b4d8':v<75?'#facc15':'#f87171'),
+          tension: 0.3,
+          yAxisID: 'y2',
+          spanGaps: true,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color:'#9ca3af', boxWidth:12 } } },
+      scales: {
+        y:  { position:'left',  ticks:{ color:'#9ca3af', callback: v=>'$'+v.toLocaleString() }, grid:{ color:'#0f3460' } },
+        y2: { position:'right', min:40, max:85, ticks:{ color:'#9ca3af', callback: v=>v+'%' }, grid:{ drawOnChartArea:false } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
 initOverview();
@@ -669,6 +865,7 @@ renderOverviewCharts();
 initForecast();
 initLabor();
 renderHistTable();
+renderWeekly();
 </script>
 </body>
 </html>
