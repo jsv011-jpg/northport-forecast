@@ -55,11 +55,11 @@
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Total Labor Cost</p>
-        <p class="text-2xl font-bold text-teal" id="stat-total-labor"></p>
+        <p class="text-2xl font-bold text-white" id="stat-total-labor"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Avg Labor %</p>
-        <p class="text-2xl font-bold text-coral" id="stat-labor-pct"></p>
+        <p class="text-2xl font-bold" id="stat-labor-pct"></p>
       </div>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -79,7 +79,7 @@
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Dinner Revenue %</p>
-        <p class="text-2xl font-bold text-coral" id="stat-dinner-pct"></p>
+        <p class="text-2xl font-bold text-white" id="stat-dinner-pct"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Best Day</p>
@@ -137,15 +137,15 @@
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Covers Booked (Dinner)</p>
-        <p class="text-2xl font-bold text-teal" id="fc-covers"></p>
+        <p class="text-2xl font-bold text-white" id="fc-covers"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Biggest Day</p>
-        <p class="text-2xl font-bold text-coral" id="fc-big-day"></p>
+        <p class="text-2xl font-bold text-green-400" id="fc-big-day"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Est. Labor Cost</p>
-        <p class="text-2xl font-bold text-yellow-400" id="fc-labor"></p>
+        <p class="text-2xl font-bold text-white" id="fc-labor"></p>
       </div>
     </div>
 
@@ -185,21 +185,21 @@
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Overall Labor %</p>
-        <p class="text-2xl font-bold text-teal" id="lab-overall-pct"></p>
+        <p class="text-2xl font-bold" id="lab-overall-pct"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Avg Dinner Labor %</p>
-        <p class="text-2xl font-bold text-green-400" id="lab-dinner-pct"></p>
+        <p class="text-2xl font-bold" id="lab-dinner-pct"></p>
       </div>
       <div class="card p-5">
         <p class="text-gray-400 text-xs mb-1">Avg Lunch Labor %</p>
-        <p class="text-2xl font-bold text-coral" id="lab-lunch-pct"></p>
+        <p class="text-2xl font-bold" id="lab-lunch-pct"></p>
       </div>
     </div>
 
     <div class="card p-5 mb-6 border border-yellow-800">
       <h3 class="text-yellow-400 font-semibold mb-2">⚠️ Lunch Profitability Alert</h3>
-      <p class="text-gray-300 text-sm">Lunch labor is averaging <strong class="text-coral" id="lab-lunch-alert-pct"></strong> of lunch revenue — you're spending more on staff than you're making at lunch most days. Consider trimming lunch hours on slow weekdays (Mon–Wed) or building lunch revenue through targeted promotions.</p>
+      <p class="text-gray-300 text-sm">Lunch labor is averaging <strong class="text-red-400" id="lab-lunch-alert-pct"></strong> of lunch revenue — you're spending more on staff than you're making at lunch most days. Consider trimming lunch hours on slow weekdays (Mon–Wed) or building lunch revenue through targeted promotions.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -309,6 +309,20 @@ const FORECAST = [
 // ═══════════════════════════════════════════════════════════════
 const $ = id => document.getElementById(id);
 const fmt = (n, decimals=0) => n==null?'—':'$'+n.toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+// Dynamic color for labor %: green <25%, teal 25-35%, yellow 35-50%, red >50%
+function laborColor(pctVal) {
+  if (pctVal < 25) return 'text-green-400';
+  if (pctVal < 35) return 'text-teal';
+  if (pctVal < 50) return 'text-yellow-400';
+  return 'text-red-400';
+}
+// Dynamic color for profit margin: green >30%, teal 15-30%, yellow 0-15%, red <0%
+function marginColor(pctVal) {
+  if (pctVal > 30) return 'text-green-400';
+  if (pctVal > 15) return 'text-teal';
+  if (pctVal > 0) return 'text-yellow-400';
+  return 'text-red-400';
+}
 const pct = (n) => n==null||isNaN(n)?'—':n.toFixed(1)+'%';
 const DOW_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
@@ -353,7 +367,9 @@ function initOverview() {
   $('stat-total-guests').textContent = totalGuests.toLocaleString();
   $('stat-dinner-pct').textContent = pct(totalDinnerRev/totalRev*100);
   $('stat-total-labor').textContent = fmt(totalLabor);
-  $('stat-labor-pct').textContent = pct(totalLabor/totalRev*100);
+  const overallLaborPct = totalLabor/totalRev*100;
+  $('stat-labor-pct').textContent = pct(overallLaborPct);
+  $('stat-labor-pct').className = 'text-2xl font-bold ' + laborColor(overallLaborPct);
   const dinnerAvg = totalDinnerRev/totalDinnerOTCovers;
   const lunchAvg = totalLunchOTCovers > 0 ? totalLunchRev/totalLunchOTCovers : 0;
   $('stat-avg-check').textContent = fmt(dinnerAvg, 2);
@@ -382,14 +398,15 @@ function initOverview() {
   const lunchMargin = lunchProfit / totalLunchRev * 100;
 
   $('stat-margin-overall').textContent = pct(overallMargin);
+  $('stat-margin-overall').className = 'text-2xl font-bold ' + marginColor(overallMargin);
   $('stat-margin-overall-detail').textContent = 'Rev '+fmt(totalRev)+' − Labor '+fmt(totalLaborCost)+' − Food '+fmt(overallFoodCost)+' = '+fmt(overallProfit);
 
   $('stat-margin-dinner').textContent = pct(dinnerMargin);
+  $('stat-margin-dinner').className = 'text-2xl font-bold ' + marginColor(dinnerMargin);
   $('stat-margin-dinner-detail').textContent = 'Rev '+fmt(totalDinnerRev)+' − Labor '+fmt(dinnerLaborCost)+' − Food '+fmt(dinnerFoodCost)+' = '+fmt(dinnerProfit);
 
   $('stat-margin-lunch').textContent = pct(lunchMargin);
-  const lunchColor = lunchMargin < 0 ? 'text-red-400' : 'text-green-400';
-  $('stat-margin-lunch').className = 'text-2xl font-bold ' + lunchColor;
+  $('stat-margin-lunch').className = 'text-2xl font-bold ' + marginColor(lunchMargin);
   $('stat-margin-lunch-detail').textContent = 'Rev '+fmt(totalLunchRev)+' − Labor '+fmt(lunchLaborCost)+' − Food '+fmt(lunchFoodCost)+' = '+fmt(lunchProfit);
 }
 
@@ -525,9 +542,14 @@ function initLabor() {
   const avgLunchPct = lunchDays.reduce((s,r)=>s+(r.llc/r.lr*100),0)/Math.max(lunchDays.length,1);
 
   $('lab-total').textContent = fmt(totalLabor);
-  $('lab-overall-pct').textContent = pct(totalLabor/totalRev*100);
-  $('lab-dinner-pct').textContent = pct(totalDinnerLabor/totalDinnerRev*100);
+  const labOverallPct = totalLabor/totalRev*100;
+  const labDinnerPct = totalDinnerLabor/totalDinnerRev*100;
+  $('lab-overall-pct').textContent = pct(labOverallPct);
+  $('lab-overall-pct').className = 'text-2xl font-bold ' + laborColor(labOverallPct);
+  $('lab-dinner-pct').textContent = pct(labDinnerPct);
+  $('lab-dinner-pct').className = 'text-2xl font-bold ' + laborColor(labDinnerPct);
   $('lab-lunch-pct').textContent = pct(avgLunchPct);
+  $('lab-lunch-pct').className = 'text-2xl font-bold ' + laborColor(avgLunchPct);
   $('lab-lunch-alert-pct').textContent = pct(avgLunchPct);
 
   const tbody = $('labor-table-body');
